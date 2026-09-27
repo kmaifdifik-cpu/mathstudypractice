@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ClassroomSpot Chat</title>
+<style>
+  :root {
+    --bg: #f4f6f8;
+    --panel: #ffffff;
+    --text: #1a1d21;
+    --muted: #6b7280;
+    --accent: #2f6fed;
+    --accent-text: #ffffff;
+    --border: #e3e6ea;
+    --bubble-other: #eef1f5;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #16181c;
+      --panel: #1f2226;
+      --text: #f2f3f5;
+      --muted: #9aa1ab;
+      --accent: #4f86ff;
+      --accent-text: #ffffff;
+      --border: #2c2f34;
+      --bubble-other: #2a2d32;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #16181c;
+    --panel: #1f2226;
+    --text: #f2f3f5;
+    --muted: #9aa1ab;
+    --accent: #4f86ff;
+    --accent-text: #ffffff;
+    --border: #2c2f34;
+    --bubble-other: #2a2d32;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); height: 100%; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 5;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  header .title { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  header .logo {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--accent); color: var(--accent-text);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 15px; flex-shrink: 0;
+  }
+  header h1 { font-size: 16px; margin: 0; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  header .sub { font-size: 12px; color: var(--muted); margin: 0; }
+  #whoami { font-size: 12px; color: var(--muted); text-align: right; flex-shrink: 0; }
+  #whoami button {
+    background: none; border: 1px solid var(--border); color: var(--text);
+    border-radius: 6px; padding: 3px 8px; font-size: 11px; cursor: pointer; margin-top: 3px;
+  }
+  main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 12px 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .msg { max-width: 78%; display: flex; flex-direction: column; }
+  .msg.me { align-self: flex-end; align-items: flex-end; }
+  .msg.other { align-self: flex-start; align-items: flex-start; }
+  .msg .name { font-size: 11px; color: var(--muted); margin: 0 6px 3px; }
+  .bubble {
+    padding: 8px 12px;
+    border-radius: 16px;
+    font-size: 14.5px;
+    line-height: 1.4;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+  }
+  .msg.me .bubble { background: var(--accent); color: var(--accent-text); border-bottom-right-radius: 4px; }
+  .msg.other .bubble { background: var(--bubble-other); color: var(--text); border-bottom-left-radius: 4px; }
+  .msg .time { font-size: 10px; color: var(--muted); margin: 3px 6px 0; }
+  .system {
+    align-self: center;
+    font-size: 12px;
+    color: var(--muted);
+    background: var(--bubble-other);
+    padding: 4px 10px;
+    border-radius: 10px;
+  }
+  #empty { color: var(--muted); text-align: center; margin-top: 40px; font-size: 14px; }
+  footer {
+    position: sticky;
+    bottom: env(safe-area-inset-bottom, 0px);
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    padding: 10px 12px;
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+  }
+  #text {
+    flex: 1;
+    resize: none;
+    max-height: 100px;
+    min-height: 40px;
+    padding: 10px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14.5px;
+    font-family: inherit;
+    outline: none;
+  }
+  #text:focus { border-color: var(--accent); }
+  #send {
+    background: var(--accent);
+    color: var(--accent-text);
+    border: none;
+    border-radius: 20px;
+    padding: 0 18px;
+    height: 40px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  #send:disabled { opacity: 0.5; cursor: default; }
+  #status { font-size: 11px; color: var(--muted); padding: 0 12px 6px; text-align: center; }
+
+  #nameModal {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+    display: flex; align-items: center; justify-content: center; z-index: 20; padding: 20px;
+  }
+  #nameModal .card {
+    background: var(--panel); border-radius: 14px; padding: 22px;
+    max-width: 320px; width: 100%; border: 1px solid var(--border);
+  }
+  #nameModal h2 { margin: 0 0 6px; font-size: 17px; }
+  #nameModal p { margin: 0 0 14px; font-size: 13px; color: var(--muted); }
+  #nameModal input {
+    width: 100%; padding: 10px 12px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--bg); color: var(--text);
+    font-size: 14.5px; outline: none; margin-bottom: 12px;
+  }
+  #nameModal input:focus { border-color: var(--accent); }
+  #nameModal button {
+    width: 100%; background: var(--accent); color: var(--accent-text);
+    border: none; border-radius: 10px; padding: 11px; font-size: 14.5px;
+    font-weight: 600; cursor: pointer;
+  }
+  .hidden { display: none !important; }
+
+  /* Bottom nav dock */
+  .dock {
+    position: fixed;
+    bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 15;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  }
+  .dock a {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text);
+    text-decoration: none;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .dock a:hover { background: var(--accent); color: var(--accent-text); }
+  .dock svg { width: 19px; height: 19px; fill: currentColor; }
+</style>
+</head>
+<body>
+
+<div id="nameModal">
+  <div class="card">
+    <h2>Join ClassroomSpot Chat</h2>
+    <p>Pick a display name. No bots here — just people in this room.</p>
+    <input id="nameInput" type="text" maxlength="24" placeholder="Your name" autocomplete="off">
+    <button id="nameJoin">Join chat</button>
+  </div>
+</div>
+
+<header>
+  <div class="title">
+    <div class="logo">CS</div>
+    <div>
+      <h1>ClassroomSpot Chat</h1>
+      <p class="sub">Live, human-only chat</p>
+    </div>
+  </div>
+  <div id="whoami"></div>
+</header>
+
+<main id="main">
+  <div id="empty">No messages yet. Say hello!</div>
+</main>
+
+<div class="dock">
+  <a href="index.html" aria-label="Home">
+    <svg viewBox="0 0 24 24"><path d="M12,3,3,10.5V21a1,1,0,0,0,1,1H9a1,1,0,0,0,1-1V15h4v6a1,1,0,0,0,1,1h5a1,1,0,0,0,1-1V10.5Z"/></svg>
+  </a>
+  <a href="games.html" aria-label="Games">
+    <svg viewBox="0 0 24 24"><path d="M17,6H7A5,5,0,0,0,2,11v2a5,5,0,0,0,5,5,3.87,3.87,0,0,0,2.65-1.05L11.71,15h.58l2.06,1.95A3.87,3.87,0,0,0,17,18a5,5,0,0,0,5-5V11A5,5,0,0,0,17,6ZM10,12H8.5v1.5a1,1,0,0,1-2,0V12H5a1,1,0,0,1,0-2H6.5V8.5a1,1,0,0,1,2,0V10H10a1,1,0,0,1,0,2Zm4.75-2.25a1.25,1.25,0,1,1-1.25,1.25A1.25,1.25,0,0,1,14.75,9.75Zm2.5,3.5a1.25,1.25,0,1,1,1.25-1.25A1.25,1.25,0,0,1,17.25,13.25Z"/></svg>
+  </a>
+  <a href="apps.html" aria-label="Apps">
+    <svg viewBox="0 0 24 24"><path d="M4,4H10V10H4ZM14,4H20V10H14ZM4,14H10V20H4ZM14,14H20V20H14Z"/></svg>
+  </a>
+  <a href="links.html" aria-label="Links">
+    <svg viewBox="0 0 24 24"><path d="M3.9,12A3.1,3.1,0,0,1,7,8.9h4V7.1H7a5,5,0,0,0,0,10h4V15.1H7A3.1,3.1,0,0,1,3.9,12ZM8,13h8V11H8Zm9-6H13V8.9h4a3.1,3.1,0,0,1,0,6.2H13V17h4a5,5,0,0,0,0-10Z"/></svg>
+  </a>
+  <a href="/cloud.html" aria-label="Cloud">
+    <svg viewBox="0 0 24 24"><path d="M19,18H6a4,4,0,0,1-.63-7.95,5.5,5.5,0,0,1,10.7-1.62A4.5,4.5,0,0,1,19,18Z"/></svg>
+  </a>
+</div>
+
+<div id="status"></div>
+<footer>
+  <textarea id="text" placeholder="Message #classroom" rows="1"></textarea>
+  <button id="send">Send</button>
+</footer>
+
+<script>
+(function () {
+  const mainEl = document.getElementById('main');
+  const emptyEl = document.getElementById('empty');
+  const textEl = document.getElementById('text');
+  const sendBtn = document.getElementById('send');
+  const statusEl = document.getElementById('status');
+  const whoamiEl = document.getElementById('whoami');
+  const nameModal = document.getElementById('nameModal');
+  const nameInput = document.getElementById('nameInput');
+  const nameJoin = document.getElementById('nameJoin');
+
+  const MAX_MESSAGES = 300;
+  let myName = null;
+  let myId = null;
+  let db = null;
+  let ready = false;
+  let pendingQueue = [];
+
+  try {
+    myId = localStorage.getItem('cs_chat_id');
+    if (!myId) {
+      myId = 'u_' + Math.random().toString(36).slice(2, 10);
+      localStorage.setItem('cs_chat_id', myId);
+    }
+    myName = localStorage.getItem('cs_chat_name');
+  } catch (e) { myId = 'u_' + Math.random().toString(36).slice(2, 10); }
+
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function fmtTime(ts) {
+    try {
+      const d = new Date(ts);
+      return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    } catch (e) { return ''; }
+  }
+
+  function render(messages) {
+    mainEl.innerHTML = '';
+    if (!messages || messages.length === 0) {
+      mainEl.appendChild(emptyEl);
+      return;
+    }
+    const atBottom = mainEl.scrollHeight - mainEl.scrollTop - mainEl.clientHeight < 80;
+    messages.forEach(m => {
+      const wrap = document.createElement('div');
+      wrap.className = 'msg ' + (m.uid === myId ? 'me' : 'other');
+      const name = document.createElement('div');
+      name.className = 'name';
+      name.textContent = m.uid === myId ? 'You' : (m.name || 'Guest');
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.innerHTML = escapeHtml(m.text || '');
+      const time = document.createElement('div');
+      time.className = 'time';
+      time.textContent = fmtTime(m.ts);
+      wrap.appendChild(name);
+      wrap.appendChild(bubble);
+      wrap.appendChild(time);
+      mainEl.appendChild(wrap);
+    });
+    if (atBottom) mainEl.scrollTop = mainEl.scrollHeight;
+  }
+
+  function setStatus(s) { statusEl.textContent = s; }
+
+  async function init() {
+    if (!window.claude || typeof window.claude.use !== 'function') {
+      setStatus('Live sync unavailable in this preview. Messages will stay on this device only.');
+      db = null;
+      ready = true;
+      return;
+    }
+    try {
+      db = await window.claude.use('db');
+    } catch (e) {
+      db = null;
+    }
+    if (!db) {
+      setStatus('Live sync unavailable here. Messages will stay on this device only.');
+      ready = true;
+      return;
+    }
+    setStatus('Connected — messages sync live.');
+    const ref = db.doc('chat/messages');
+    ref.onSnapshot(
+      (snap) => {
+        const data = snap.data && snap.data();
+        const messages = (data && data.list) || [];
+        render(messages);
+      },
+      (err) => {
+        setStatus('Sync error: ' + (err && err.code ? err.code : 'unavailable'));
+      }
+    );
+    ready = true;
+  }
+
+  async function sendMessage(text) {
+    text = text.trim();
+    if (!text) return;
+    const entry = {
+      id: myId + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+      uid: myId,
+      name: myName,
+      text: text,
+      ts: Date.now()
+    };
+
+    if (!db) {
+      // Local-only fallback: just render it in-session.
+      const existing = Array.from(mainEl.querySelectorAll('.msg')).length;
+      render([...(window.__localMsgs = window.__localMsgs || []), entry]);
+      return;
+    }
+
+    sendBtn.disabled = true;
+    try {
+      const ref = db.doc('chat/messages');
+      const snap = await ref.get();
+      const data = (snap && snap.data && snap.data()) || {};
+      const list = Array.isArray(data.list) ? data.list.slice() : [];
+      list.push(entry);
+      while (list.length > MAX_MESSAGES) list.shift();
+      await ref.set({ list: list });
+    } catch (e) {
+      setStatus('Could not send — please try again.');
+    } finally {
+      sendBtn.disabled = false;
+    }
+  }
+
+  function autoGrow() {
+    textEl.style.height = 'auto';
+    textEl.style.height = Math.min(textEl.scrollHeight, 100) + 'px';
+  }
+
+  textEl.addEventListener('input', autoGrow);
+  textEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      const v = textEl.value;
+      textEl.value = '';
+      autoGrow();
+      sendMessage(v);
+    }
+  });
+  sendBtn.addEventListener('click', () => {
+    const v = textEl.value;
+    textEl.value = '';
+    autoGrow();
+    sendMessage(v);
+  });
+
+  function showWhoami() {
+    whoamiEl.innerHTML = 'Signed in as <strong>' + escapeHtml(myName) + '</strong><br><button id="switchName">Change name</button>';
+    document.getElementById('switchName').addEventListener('click', () => {
+      nameInput.value = myName;
+      nameModal.classList.remove('hidden');
+    });
+  }
+
+  function joinWithName(n) {
+    n = (n || '').trim().slice(0, 24);
+    if (!n) return;
+    myName = n;
+    try { localStorage.setItem('cs_chat_name', myName); } catch (e) {}
+    nameModal.classList.add('hidden');
+    showWhoami();
+  }
+
+  nameJoin.addEventListener('click', () => joinWithName(nameInput.value));
+  nameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') joinWithName(nameInput.value);
+  });
+
+  if (myName) {
+    nameModal.classList.add('hidden');
+    showWhoami();
+  } else {
+    nameInput.focus();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
