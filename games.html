@@ -1,11 +1,13 @@
 <div id="games"></div>
 
-<script
-  src="https://cdn.jsdelivr.net/gh/luminsdk/script@latest/lumin.min.js"
-></script>
+<script src="https://cdn.jsdelivr.net/gh/luminsdk/script@latest/lumin.min.js"></script>
 <script>
-  Lumin.init({
-    container: '#games',
-    theme: 'dark'
-  });
+Lumin.init({
+  container: '#games',
+  theme: 'dark',
+  columns: 12,
+  rows: 8,
+  gamesPerPage: 96,
+  showRandom: false,
+});
 </script>
