@@ -1,0 +1,173 @@
+<!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Links</title> <style>
+:root {
+  --bg:#000;
+  --text:#fff;
+  --muted:#aaa;
+  --border:rgba(255,255,255,.14);
+  --card:rgba(255,255,255,.035);
+  --card-hover:rgba(255,255,255,.09);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  min-height:100vh;color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:#000;overflow-x:hidden
+}
+#particles{position:fixed;inset:0;width:100%;height:100%;z-index:-2;pointer-events:none}
+header{text-align:center;padding:70px 20px 25px;animation:fadeDown .8s ease both}
+.logo{
+  width:72px;height:72px;margin:0 auto 20px;display:grid;place-items:center;
+  border-radius:20px;background:#080808;border:1px solid rgba(255,255,255,.25);
+  box-shadow:0 0 30px rgba(255,255,255,.12),inset 0 1px rgba(255,255,255,.15);
+  font-size:32px;font-weight:900;animation:pulse 4s ease-in-out infinite
+}
+@keyframes pulse{50%{box-shadow:0 0 45px rgba(255,255,255,.22),inset 0 1px rgba(255,255,255,.2)}}
+h1{font-size:clamp(38px,7vw,72px);letter-spacing:-3px;line-height:1}
+.gradient-text{color:#fff}
+.nav{
+  max-width:1100px;margin:25px auto 10px;padding:0 20px;
+  display:flex;gap:10px;flex-wrap:wrap;justify-content:center
+}
+.nav button{
+  border:1px solid var(--border);color:#fff;background:rgba(0,0,0,.65);
+  backdrop-filter:blur(10px);border-radius:999px;padding:9px 15px;cursor:pointer;
+  transition:.25s
+}
+.nav button:hover,.nav button.active{
+  color:#000;border-color:#fff;background:#fff;transform:translateY(-2px);
+  box-shadow:0 0 18px rgba(255,255,255,.2)
+}
+main{width:min(1150px,calc(100% - 30px));margin:35px auto 100px}
+.category{margin-top:48px;animation:fadeUp .7s ease both}
+.category-title{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.category-title h2{font-size:23px;color:#fff}
+.category-title span{color:var(--muted);font-size:13px}
+.line{height:1px;flex:1;background:linear-gradient(90deg,rgba(255,255,255,.4),transparent)}
+.links{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.link-card{
+  position:relative;display:flex;align-items:center;gap:14px;min-height:82px;padding:17px;
+  border:1px solid var(--border);border-radius:18px;color:#fff;text-decoration:none;
+  background:var(--card);backdrop-filter:blur(16px);overflow:hidden;
+  transition:transform .25s ease,border-color .25s ease,background .25s ease,box-shadow .25s ease;
+  animation:cardIn .5s ease both
+}
+.link-card::before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(120deg,transparent 20%,rgba(255,255,255,.12),transparent 80%);
+  transform:translateX(-120%);transition:.6s
+}
+.link-card:hover::before{transform:translateX(120%)}
+.link-card:hover{
+  transform:translateY(-5px) scale(1.01);background:var(--card-hover);
+  border-color:rgba(255,255,255,.55);
+  box-shadow:0 15px 45px rgba(0,0,0,.5),0 0 25px rgba(255,255,255,.08)
+}
+.icon{
+  width:46px;height:46px;flex:0 0 46px;display:grid;place-items:center;border-radius:14px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);font-size:21px
+}
+.link-info{min-width:0}
+.link-name{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.link-url{margin-top:4px;color:#888;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.arrow{margin-left:auto;color:#777;transition:.25s}
+.link-card:hover .arrow{color:#fff;transform:translateX(4px)}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-25px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(25px)}to{opacity:1;transform:translateY(0)}}
+@keyframes cardIn{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:600px){
+  header{padding-top:45px}h1{letter-spacing:-2px}.links{grid-template-columns:1fr}.category{margin-top:35px}
+}
+.dock {
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
+  display:flex;gap:14px;z-index:10;
+  background:rgba(0,0,0,.65);backdrop-filter:blur(10px);
+  border:1px solid var(--border);border-radius:999px;padding:10px;;
+  flex-wrap:wrap;
+  justify-content:center;
+  max-width:92vw;
+}
+.dock a {
+  width:46px;height:46px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;text-decoration:none;transition:.25s;
+}
+.dock a:hover{background:#fff;color:#000;}
+.dock svg{width:22px;height:22px;fill:currentColor;}
+</style> </head> <body>
+<canvas id="particles"></canvas> <header>
+</header>
+<main id="linkContainer"></main>
+
+<div class="dock">
+  <a href="index.html" aria-label="Home">
+    <svg viewBox="0 0 24 24"><path d="M12,3,3,10.5V21a1,1,0,0,0,1,1H9a1,1,0,0,0,1-1V15h4v6a1,1,0,0,0,1,1h5a1,1,0,0,0,1-1V10.5Z"/></svg>
+  </a>
+  <a href="games.html" aria-label="Games">
+    <svg viewBox="0 0 24 24"><path d="M17,6H7A5,5,0,0,0,2,11v2a5,5,0,0,0,5,5,3.87,3.87,0,0,0,2.65-1.05L11.71,15h.58l2.06,1.95A3.87,3.87,0,0,0,17,18a5,5,0,0,0,5-5V11A5,5,0,0,0,17,6ZM10,12H8.5v1.5a1,1,0,0,1-2,0V12H5a1,1,0,0,1,0-2H6.5V8.5a1,1,0,0,1,2,0V10H10a1,1,0,0,1,0,2Zm4.75-2.25a1.25,1.25,0,1,1-1.25,1.25A1.25,1.25,0,0,1,14.75,9.75Zm2.5,3.5a1.25,1.25,0,1,1,1.25-1.25A1.25,1.25,0,0,1,17.25,13.25Z"/></svg>
+  </a>
+  <a href="apps.html" aria-label="Apps">
+    <svg viewBox="0 0 24 24"><path d="M4,4H10V10H4ZM14,4H20V10H14ZM4,14H10V20H4ZM14,14H20V20H14Z"/></svg>
+  </a>
+  <a href="/cloud.html" aria-label="Cloud">
+    <svg viewBox="0 0 24 24"><path d="M19,18H6a4,4,0,0,1-.63-7.95,5.5,5.5,0,0,1,10.7-1.62A4.5,4.5,0,0,1,19,18Z"/></svg>
+  </a>
+  <a href="chat.html" aria-label="Chat">
+    <svg viewBox="0 0 24 24"><path d="M4,4H20a1,1,0,0,1,1,1V17a1,1,0,0,1-1,1H8l-4,4V5A1,1,0,0,1,4,4Z"/></svg>
+  </a>
+  <a href="music.html" aria-label="Music">
+    <svg viewBox="0 0 24 24"><path d="M12,3V13.55A4,4,0,1,0,14,17V7H18V3Z"/></svg>
+  </a>
+  <a href="movies.html" aria-label="Movies">
+    <svg viewBox="0 0 24 24"><path d="M4,5H20a1,1,0,0,1,1,1V18a1,1,0,0,1-1,1H4a1,1,0,0,1-1-1V6A1,1,0,0,1,4,5Zm5,3v8l7-4Z"/></svg>
+  </a>
+  <a href="chatgpt.html" aria-label="ChatGPT">
+    <svg viewBox="0 0 24 24"><path d="M12,2C12.5,7 13,9.5 14,10.5C15,11.5 17.5,12 22,12C17.5,12 15,12.5 14,13.5C13,14.5 12.5,17 12,22C11.5,17 11,14.5 10,13.5C9,12.5 6.5,12 2,12C6.5,12 9,11.5 10,10.5C11,9.5 11.5,7 12,2Z"/></svg>
+  </a>
+</div>
+<script> const data = { "Fern": [ ["Fern Links", "https://s3.amazonaws.com/fernlinks/index.html"], ["Classworks", "https://s3.amazonaws.com/classworks/index.html"], ["Bull 33", "https://s3.amazonaws.com/bull33/index.html"], ["Bull Best YouTuber", "https://s3.amazonaws.com/bullbestyoutuber/index.html"], ["Bull Edu", "https://s3.amazonaws.com/bulledu/index.html"], ["Bull Guardian", "https://s3.amazonaws.com/bullguardian/index.html"], ["Bull Is Goated", "https://s3.amazonaws.com/bullisgoated/index.html"], ["Bull Lightspeed", "https://s3.amazonaws.com/bulllightspeed/index.html"], ["Bull Math", "https://s3.amazonaws.com/bullmath/index.html"], ["Bull UBG", "https://s3.amazonaws.com/bullubg/index.html"], ["I Love Literatures", "https://s3.amazonaws.com/iloveliteratures/index.html"], ["I Love Maths", "https://s3.amazonaws.com/ilovemaths/index.html"], ["LS Relay Extension", "https://s3.amazonaws.com/lsrelay-extension-production/index.html"], ["Macrolo", "https://s3.amazonaws.com/macrolo/index.html"], ["Macrolo Goat", "https://s3.amazonaws.com/macrologoat/index.html"], ["Macrolo Math", "https://s3.amazonaws.com/macrolomath/index.html"], ["Deagan Fern", "https://s3.amazonaws.com/deaganfern/index.html"], ["2027G4MES", "https://s3.amazonaws.com/2027g4mes/index.html"], ["WriteVC", "https://s3.amazonaws.com/writevc/index.html"], ["One Last Link", "https://s3.amazonaws.com/onelastlink/index.html"], ["Bull Best YouTuber — Regional", "https://bullbestyoutuber.s3.us-east-1.amazonaws.com/index.html"] ], "GN-Math": [ ["Snoopy Learning — SVG", "https://unpkg.com/snoopylearning@1.0.0/index.svg"], ["Snoopy Learning", "https://unpkg.com/snoopylearning@1.0.0/index.html"], ["Snoopy Learning — jsDelivr", "https://fastly.jsdelivr.net/npm/snoopylearning@1.0.0/index.svg"], ["Snoopy Learning — esm.sh", "https://esm.sh/snoopylearning@1.0.0/index.html"], ["SoloLearn Playground", "https://sololearn.com/en/compiler-playground/W6oaP0W77da1"], ["GN Math SVG", "https://jsdelivr.b-cdn.net/gh/stockable/sites@main/gnmath.svg"], ["Teacher Clipart", "https://cdn.app.pickcode.io/teacher-clipart.svg"], ["Coding Computer", "https://cdn.app.pickcode.io/coding-computer-img.svg"], ["Free Business Education", "https://cdn.app.pickcode.io/free-business-educational.svg"], ["Coding Computer — Inksoft", "https://cdn.inksoft.com/coding-computer-img.svg"], ["Teacher Clipart — Inksoft", "https://cdn.inksoft.com/teacher-clipart.svg"], ["Free Business Education — S3", "https://sdc-file-service-bucket.s3.amazonaws.com/free-business-educational.svg"], ["Coding Computer — S3", "https://sdc-file-service-bucket.s3.amazonaws.com/coding-computer-img.svg"], ["Teacher Clipart — S3", "https://sdc-file-service-bucket.s3.amazonaws.com/teacher-clipart.svg"] ], "DuckMath": [ ["DuckMath", "https://duck.mytutors.top"], ["Clever Hub 22", "https://clever-hub22.learningatschool.website"], ["Silver Spark 62", "https://silver-spark62.learningatschool.website"] ], "YukiOS": [ ["YukiOS — jsDelivr", "https://cdn.jsdelivr.net/gh/reeyuki/YukiOsSingleHtml@main/yukios.svg"], ["YukiOS — Origin Fastly", "https://originfastly.jsdelivr.net/gh/reeyuki/YukiOsSingleHtml@main/yukios.svg"], ["YukiOS — gcore", "https://gcore.jsdelivr.net/gh/reeyuki/YukiOsSingleHtml@main/yukios.svg"], ["YukiOS — esm.sh", "https://esm.sh/gh/reeyuki/YukiOsSingleHtml@main/yukios.svg"], ["YukiOS — Statically", "https://cdn.statically.io/gh/reeyuki/YukiOsSingleHtml@main/yukios.svg"], ["YukiOS — StaticDelivr", "https://cdn.staticdelivr.com/gh/reeyuki/YukiOsSingleHtml/main/yukios.svg"] ], "Melon Soda": [ ["Melon Soda", "https://meronsooda.netlify.app"], ["Melon Soda — npm", "https://unpkg.com/melonsoda@1.0.0/offline/selfupdating.html"], ["IXL — jsDelivr", "https://cdn.jsdelivr.net/gh/linuxfandudeguy/classwork-chemistry@main/ixl.svg"], ["IXL — Fastly", "https://fastly.jsdelivr.net/gh/linuxfandudeguy/classwork-chemistry@main/ixl.svg"], ["IXL — gcore", "https://gcore.jsdelivr.net/gh/linuxfandudeguy/classwork-chemistry@main/ixl.svg"], ["IXL — Origin Fastly", "https://originfastly.jsdelivr.net/gh/linuxfandudeguy/classwork-chemistry@main/ixl.svg"], ["Learn French Easy", "https://learn-french-easy.wasmer.app/offline/selfupdating.html"], ["Educational Algebra Study Tutor", "https://educational-algebra-study-tutor.edgeone.app/offline/selfupdating.html"], ["K12 Algebra Tutoring", "https://k12-algebra-tutoring-edu-us-resources.pages.dev/offline/selfupdating.html"], ["French Resources", "https://free-french-resources.web.app/offline/selfupdating.html"], ["French Resources — Firebase", "https://free-french-resources.firebaseapp.com/offline/selfupdating.html"], ["Scientific Algebra Calculator", "https://unpkg.com/scientific-algebra-calculator@1.0.0/ixl.svg"] ], "UBZone": [ ["UBZone — latest", "https://cdn.jsdelivr.net/gh/UNBL0CKEDZ0NE/ubassets@latest/assets/index.svg"], ["UBZone — main", "https://cdn.jsdelivr.net/gh/UNBL0CKEDZ0NE/ubassets@main/assets/index.svg"], ["UBZone — master", "https://cdn.jsdelivr.net/gh/UNBL0CKEDZ0NE/ubassets@master/assets/index.svg"], ["UBZone — jsDelivr", "https://cdn.jsdelivr.net/gh/UNBL0CKEDZ0NE/ubassets/assets/index.svg"], ["UBZone — gcore", "https://gcore.jsdelivr.net/gh/UNBL0CKEDZ0NE/ubassets/assets/index.svg"], ["UBZone — Fastly", "https://fastly.jsdelivr.net/gh/UNBL0CKEDZ0NE/ubassets/assets/index.svg"], ["UBZone — Statically", "https://cdn.statically.io/gh/UNBL0CKEDZ0NE/ubassets/assets/index.svg"], ["UBZone — jsdmirror", "https://cdn.jsdmirror.com/gh/UNBL0CKEDZ0NE/ubassets/assets/index.svg"], ["UBZone — StaticDelivr", "https://cdn.staticdelivr.com/gh/UNBL0CKEDZ0NE/ubassets/assets/index.svg"] ], "Google": [ ["Google Script 1", "https://script.google.com/macros/s/AKfycbysPro23E..."], ["Google Script 2", "https://script.google.com/macros/s/AKfycbz13Vz3OSfD..."], ["Google Script 3", "https://script.google.com/macros/s/AKfycbw_lbYtmMqCN..."], ["Google Script 4", "https://script.google.com/macros/s/AKfycbyW_ki9nsajU..."], ["Padlet Wish", "https://padlet.com/padlet-esk7ujq9dsouvtbu/wish/9kmlZVpzw6gEapgV"], ["Bradar Website", "https://bradarwhatisthis.web.app"] ], "Windows Background": [ ["Windows Background — jsDelivr", "https://cdn.jsdelivr.net/gh/googleaccountuser/myfirstrepo@main/windows10background.svg"], ["Windows Background — gcore", "https://gcore.jsdelivr.net/gh/googleaccountuser/myfirstrepo@main/windows10background.svg"], ["Windows Background — Fastly", "https://fastly.jsdelivr.net/gh/googleaccountuser/myfirstrepo@main/windows10background.svg"], ["Windows Background — Statically", "https://cdn.statically.io/gh/googleaccountuser/myfirstrepo@main/windows10background.svg"], ["Windows Background — jsdmirror", "https://cdn.jsdmirror.com/gh/googleaccountuser/myfirstrepo@main/windows10background.svg"], ["Windows Background — master", "https://cdn.staticdelivr.com/gh/googleaccountuser/myfirstrepo/master/windows10background.svg"] ] }; /* Create cards */ const container = document.getElementById("linkContainer");
+function iconFor(category) { const icons = { "Fern": "🌿", "GN-Math": "🧮", "DuckMath": "🦆", "YukiOS": "💻", "Melon Soda": "🍈", "UBZone": "🚀", "Google": "🔎", "Windows Background": "🪟" }; return icons[category] || "🔗"; } function render() { container.innerHTML = "";
+Object.entries(data).forEach(([category, links]) => { const matching = links;
+        if (!matching.length) return; const section = document.createElement("section"); section.className = "category"; section.dataset.category = category; section.innerHTML = ` <div class="category-title"> <h2>${iconFor(category)} ${category}</h2> <span>${matching.length} link${matching.length === 1 ? "" : "s"}</span> <div class="line"></div> </div> <div class="links"></div> `; const grid = section.querySelector(".links"); matching.forEach(([name, url], index) => { const card = document.createElement("a"); card.className = "link-card"; card.href = url; card.target = "_blank"; card.rel = "noopener noreferrer"; card.style.animationDelay = `${index * 35}ms`; card.innerHTML = ` <div class="icon">${iconFor(category)}</div> <div class="link-info"> <div class="link-name"> ${escapeHTML(name)} </div> <div class="link-url"> ${escapeHTML(url)} </div> </div> <div class="arrow">→</div> `; grid.appendChild(card); }); container.appendChild(section); }); if (!container.children.length) { container.innerHTML = ` <div style=" text-align:center; padding:80px 20px; color:#64748b; "> <div style="font-size:48px;margin-bottom:15px">🔍</div> <h2 style="color:#cbd5e1">No links found</h2> <p style="margin-top:8px"> Try a different search. </p> </div> `; } } function escapeHTML(str) { return str .replaceAll("&", "&amp;") .replaceAll("<", "&lt;") .replaceAll(">", "&gt;") .replaceAll('"', "&quot;") .replaceAll("'", "&#039;"); }
+ /* Initial render */ render(); </script> 
+<script>
+const canvas = document.getElementById("particles");
+const ctx = canvas.getContext("2d");
+let particles = [];
+
+function resizeParticles() {
+  canvas.width = window.innerWidth * devicePixelRatio;
+  canvas.height = window.innerHeight * devicePixelRatio;
+  canvas.style.width = window.innerWidth + "px";
+  canvas.style.height = window.innerHeight + "px";
+  ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+  particles = Array.from({length: Math.min(120, Math.floor(window.innerWidth / 10))}, () => ({
+    x: Math.random()*window.innerWidth,
+    y: Math.random()*window.innerHeight,
+    r: Math.random()*1.7+.3,
+    vx:(Math.random()-.5)*.35,
+    vy:(Math.random()-.5)*.35,
+    a:Math.random()*.65+.2
+  }));
+}
+function animateParticles() {
+  ctx.clearRect(0,0,window.innerWidth,window.innerHeight);
+  for (const p of particles) {
+    p.x += p.vx; p.y += p.vy;
+    if(p.x<0)p.x=window.innerWidth;
+    if(p.x>window.innerWidth)p.x=0;
+    if(p.y<0)p.y=window.innerHeight;
+    if(p.y>window.innerHeight)p.y=0;
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=`rgba(255,255,255,${p.a})`;
+    ctx.fill();
+  }
+  requestAnimationFrame(animateParticles);
+}
+window.addEventListener("resize", resizeParticles);
+resizeParticles();
+animateParticles();
+</script>
+
+</body> </html>
