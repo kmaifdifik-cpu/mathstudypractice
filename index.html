@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ClassroomSpot v18</title>
+<style>
+  :root {
+    --accent: #6C8CFF;
+    --bg: #050507;
+    --panel: #101014;
+    --border: #232329;
+    --text: #F2F2F5;
+    --muted: #8A8A93;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    position: relative;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  /* Starfield */
+  #stars {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* Settings gear */
+  .settings-btn {
+    position: fixed;
+    top: 24px;
+    right: 28px;
+    z-index: 10;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: rgba(16,16,20,0.8);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+  }
+  .settings-btn:hover { border-color: var(--accent); transform: rotate(25deg); }
+  .settings-btn svg { width: 20px; height: 20px; fill: currentColor; }
+
+  .settings-panel {
+    position: fixed;
+    top: 76px;
+    right: 28px;
+    z-index: 10;
+    width: 240px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    display: none;
+    flex-direction: column;
+    gap: 14px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+  }
+  .settings-panel.open { display: flex; }
+
+  .settings-panel h3 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+  }
+
+  .swatches {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+  }
+  .swatch.active { border-color: var(--text); }
+
+  .custom-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .custom-row input[type="color"] {
+    width: 40px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: transparent;
+    cursor: pointer;
+  }
+  .custom-row button {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 8px 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+  }
+  .custom-row button:hover { border-color: var(--accent); }
+
+  /* Main content */
+  main {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+  }
+
+  h1 {
+    font-size: clamp(40px, 8vw, 64px);
+    font-weight: 700;
+    margin: 0 0 40px;
+    letter-spacing: -0.02em;
+  }
+
+  .search-row {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    max-width: 560px;
+  }
+
+  .search-row input {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 14px 20px;
+    color: var(--text);
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.15s ease;
+  }
+  .search-row input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-glow, transparent); }
+  .search-row input::placeholder { color: var(--muted); }
+
+  .search-row button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 14px 22px;
+    color: var(--text);
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+    white-space: nowrap;
+  }
+  .search-row button:hover { border-color: var(--accent); background: rgba(255,255,255,0.03); }
+  .search-row svg { width: 16px; height: 16px; fill: currentColor; }
+
+  /* Bottom nav */
+  .dock {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 14px;
+    z-index: 10;
+    background: rgba(16,16,20,0.8);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 10px;
+  }
+
+  .dock a {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text);
+    text-decoration: none;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .dock a:hover { background: var(--accent); color: #0B0B0F; box-shadow: 0 0 18px var(--accent-glow, transparent); }
+  .dock svg { width: 22px; height: 22px; fill: currentColor; }
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<button class="settings-btn" id="settingsBtn" aria-label="Settings">
+  <svg viewBox="0 0 24 24"><path d="M19.14,12.94a7.14,7.14,0,0,0,.06-.94,7.14,7.14,0,0,0-.06-.94l2.03-1.58a.5.5,0,0,0,.12-.64l-1.92-3.32a.5.5,0,0,0-.6-.22l-2.39.96a7.03,7.03,0,0,0-1.63-.94L14.4,2.81a.49.49,0,0,0-.49-.41H10.09a.49.49,0,0,0-.49.41L9.25,5.26a7.03,7.03,0,0,0-1.63.94l-2.39-.96a.5.5,0,0,0-.6.22L2.71,8.78a.5.5,0,0,0,.12.64L4.86,11a7.14,7.14,0,0,0-.06.94,7.14,7.14,0,0,0,.06.94L2.83,14.46a.5.5,0,0,0-.12.64l1.92,3.32a.5.5,0,0,0,.6.22l2.39-.96c.5.39,1.05.71,1.63.94l.35,2.45a.49.49,0,0,0,.49.41h3.82a.49.49,0,0,0,.49-.41l.35-2.45a7.03,7.03,0,0,0,1.63-.94l2.39.96a.5.5,0,0,0,.6-.22l1.92-3.32a.5.5,0,0,0-.12-.64ZM12,15.5A3.5,3.5,0,1,1,15.5,12,3.5,3.5,0,0,1,12,15.5Z"/></svg>
+</button>
+
+<div class="settings-panel" id="settingsPanel">
+  <h3>Theme color</h3>
+  <div class="swatches" id="swatches">
+    <div class="swatch active" style="background:#6C8CFF" data-color="#6C8CFF"></div>
+    <div class="swatch" style="background:#FF6B6B" data-color="#FF6B6B"></div>
+    <div class="swatch" style="background:#4ADE80" data-color="#4ADE80"></div>
+    <div class="swatch" style="background:#FBBF24" data-color="#FBBF24"></div>
+    <div class="swatch" style="background:#C084FC" data-color="#C084FC"></div>
+    <div class="swatch" style="background:#F472B6" data-color="#F472B6"></div>
+  </div>
+  <h3>Custom color</h3>
+  <div class="custom-row">
+    <input type="color" id="customColor" value="#6C8CFF">
+    <button id="applyCustom">Apply</button>
+  </div>
+</div>
+
+<main>
+  <h1>ClassroomSpot v18</h1>
+  <div class="search-row">
+    <input type="text" id="searchInput" placeholder="Search or enter a URL">
+    <button id="searchBtn">
+      Search
+      <svg viewBox="0 0 24 24"><path d="M15.5,14h-.79l-.28-.27a6.51,6.51,0,1,0-.7.7l.27.28v.79l5,4.99L20.49,19ZM9.5,14A4.5,4.5,0,1,1,14,9.5,4.5,4.5,0,0,1,9.5,14Z"/></svg>
+    </button>
+  </div>
+</main>
+
+<div class="dock">
+  <a href="games.html" aria-label="Games">
+    <svg viewBox="0 0 24 24"><path d="M17,6H7A5,5,0,0,0,2,11v2a5,5,0,0,0,5,5,3.87,3.87,0,0,0,2.65-1.05L11.71,15h.58l2.06,1.95A3.87,3.87,0,0,0,17,18a5,5,0,0,0,5-5V11A5,5,0,0,0,17,6ZM10,12H8.5v1.5a1,1,0,0,1-2,0V12H5a1,1,0,0,1,0-2H6.5V8.5a1,1,0,0,1,2,0V10H10a1,1,0,0,1,0,2Zm4.75-2.25a1.25,1.25,0,1,1-1.25,1.25A1.25,1.25,0,0,1,14.75,9.75Zm2.5,3.5a1.25,1.25,0,1,1,1.25-1.25A1.25,1.25,0,0,1,17.25,13.25Z"/></svg>
+  </a>
+  <a href="apps.html" aria-label="Apps">
+    <svg viewBox="0 0 24 24"><path d="M4,4H10V10H4ZM14,4H20V10H14ZM4,14H10V20H4ZM14,14H20V20H14Z"/></svg>
+  </a>
+  <a href="links.html" aria-label="Links">
+    <svg viewBox="0 0 24 24"><path d="M3.9,12A3.1,3.1,0,0,1,7,8.9h4V7.1H7a5,5,0,0,0,0,10h4V15.1H7A3.1,3.1,0,0,1,3.9,12ZM8,13h8V11H8Zm9-6H13V8.9h4a3.1,3.1,0,0,1,0,6.2H13V17h4a5,5,0,0,0,0-10Z"/></svg>
+  </a>
+</div>
+
+<script>
+  // Starfield
+  const canvas = document.getElementById('stars');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const count = Math.floor((canvas.width * canvas.height) / 5000);
+    stars = Array.from({ length: count }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 1.4 + 0.3,
+      a: Math.random() * 0.6 + 0.2,
+      vy: Math.random() * 0.15 + 0.03,
+      drift: (Math.random() - 0.5) * 0.06,
+      twinkle: Math.random() * Math.PI * 2
+    }));
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    stars.forEach(s => {
+      const flicker = reduceMotion ? s.a : s.a + Math.sin(s.twinkle) * 0.15;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${Math.max(0.1, Math.min(1, flicker))})`;
+      ctx.fill();
+    });
+  }
+
+  function tick() {
+    if (!reduceMotion) {
+      stars.forEach(s => {
+        s.y += s.vy;
+        s.x += s.drift;
+        s.twinkle += 0.02;
+        if (s.y > canvas.height) { s.y = 0; s.x = Math.random() * canvas.width; }
+        if (s.x > canvas.width) s.x = 0;
+        if (s.x < 0) s.x = canvas.width;
+      });
+    }
+    draw();
+    requestAnimationFrame(tick);
+  }
+
+  window.addEventListener('resize', resize);
+  resize();
+  tick();
+
+  // Settings panel
+  const settingsBtn = document.getElementById('settingsBtn');
+  const settingsPanel = document.getElementById('settingsPanel');
+  settingsBtn.addEventListener('click', () => {
+    settingsPanel.classList.toggle('open');
+  });
+  document.addEventListener('click', (e) => {
+    if (!settingsPanel.contains(e.target) && e.target !== settingsBtn && !settingsBtn.contains(e.target)) {
+      settingsPanel.classList.remove('open');
+    }
+  });
+
+  // Theme color
+  function hexToRgb(hex) {
+    const m = hex.replace('#', '').match(/.{1,2}/g);
+    return m.map(x => parseInt(x, 16));
+  }
+
+  function setAccent(color, activeSwatch) {
+    document.documentElement.style.setProperty('--accent', color);
+    const [r, g, b] = hexToRgb(color);
+    document.documentElement.style.setProperty('--accent-glow', `rgba(${r},${g},${b},0.18)`);
+    document.body.style.background = `radial-gradient(circle at 50% 20%, rgba(${r},${g},${b},0.10), var(--bg) 60%)`;
+    document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+    if (activeSwatch) activeSwatch.classList.add('active');
+    document.getElementById('customColor').value = color;
+    try { localStorage.setItem('csp-accent', color); } catch (e) {}
+  }
+
+  document.querySelectorAll('.swatch').forEach(sw => {
+    sw.addEventListener('click', () => setAccent(sw.dataset.color, sw));
+  });
+
+  document.getElementById('applyCustom').addEventListener('click', () => {
+    const val = document.getElementById('customColor').value;
+    setAccent(val, null);
+  });
+
+  try {
+    const saved = localStorage.getItem('csp-accent');
+    setAccent(saved || '#6C8CFF',
+      [...document.querySelectorAll('.swatch')].find(s => s.dataset.color === saved) || document.querySelector('.swatch'));
+  } catch (e) {}
+
+  // Search
+  function doSearch() {
+    const val = document.getElementById('searchInput').value.trim();
+    if (!val) return;
+    const isUrl = /^https?:\/\//i.test(val) || (/\./.test(val) && !/\s/.test(val));
+    window.location.href = isUrl ? (/^https?:\/\//i.test(val) ? val : 'https://' + val)
+      : 'https://www.google.com/search?q=' + encodeURIComponent(val);
+  }
+  document.getElementById('searchBtn').addEventListener('click', doSearch);
+  document.getElementById('searchInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') doSearch();
+  });
+</script>
+
+</body>
+</html>
