@@ -721,7 +721,21 @@
 </section>
 
 <section class="page-view" id="view-games">
-<div id="games"></div>
+<div class="game-tabs">
+<button class="game-tab active" data-gpanel="lumin">Lumin</button>
+<button class="game-tab" data-gpanel="gn">GN-Math</button>
+<button class="game-tab" data-gpanel="ugs">UGS</button>
+</div>
+<div class="gpanel active" id="gpanel-lumin"><div id="games"></div></div>
+<div class="gpanel" id="gpanel-gn">
+<div class="gn-head"><h2>GN-Math Games</h2><span id="gn-count"></span><input type="text" id="gn-search" placeholder="Search GN games..." autocomplete="off"></div>
+<div id="gn-grid"></div>
+</div>
+<div class="gpanel" id="gpanel-ugs">
+<div class="gn-head"><h2>Ultimate Game Stash</h2><span id="ugs-count"></span><input type="text" id="ugs-search" placeholder="Search UGS games..." autocomplete="off"></div>
+<div id="ugs-grid"></div>
+</div>
+<div id="gn-player" hidden><div class="gn-player-bar"><span id="gn-player-title"></span><button id="gn-player-close">✕ Close</button></div><iframe id="gn-player-frame" allow="fullscreen; autoplay; gamepad" allowfullscreen></iframe></div>
 </section>
 
 <section class="page-view" id="view-apps">
@@ -2303,14 +2317,238 @@ function showPage(name){
   Object.keys(pageViews).forEach(function(k){ pageViews[k].classList.remove("active"); });
   pageViews[name].classList.add("active");
   document.querySelectorAll(".dock a[data-page]").forEach(function(a){ a.classList.toggle("active", a.getAttribute("data-page") === name); });
-  if (name === "games") initLuminView();
   var nm = document.getElementById("nameModal");
   if (nm && name !== "chat") nm.classList.add("hidden");
+  if (name === "games") initLuminView();
+  if (name === "games" && typeof window.initGNView === "function") { try { window.initGNView(); } catch (e) { console.error("[init:gn]", e && e.message); } }
   window.scrollTo(0, 0);
 }
 document.querySelectorAll(".dock a[data-page]").forEach(function(a){
   a.addEventListener("click", function(e){ e.preventDefault(); showPage(a.getAttribute("data-page")); });
 });
+</script>
+<script>
+/* ---------- GN-Math games ---------- */
+(function(){
+  try {
+    var css = [
+      '#view-games .gn-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:26px 20px 14px}',
+      '#view-games .gn-head h2{margin:0;font-size:22px}',
+      '#gn-count{color:var(--muted);font-size:13px}',
+      '#gn-search{margin-left:auto;background:rgba(16,16,20,0.8);border:1px solid var(--border);color:var(--text);border-radius:999px;padding:9px 16px;font-size:13px;outline:none;min-width:200px}',
+      '#gn-search:focus{border-color:var(--accent)}',
+      '#gn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;padding:0 20px}',
+      '.gn-card{background:rgba(16,16,20,0.8);border:1px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;padding:0;text-align:center;color:var(--text);font:inherit;transition:transform 0.15s ease,border-color 0.15s ease}',
+      '.gn-card:hover{transform:translateY(-4px);border-color:var(--accent)}',
+      '.gn-card img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:#0a0a0e}',
+      '.gn-card span{display:block;padding:9px 8px;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+      '#gn-player{position:fixed;inset:0;z-index:5000;display:flex;flex-direction:column;background:#000}',
+      '#gn-player[hidden]{display:none}',
+      '#gn-player .gn-player-bar{display:flex;align-items:center;gap:12px;padding:10px 16px;background:#0a0a0e;border-bottom:1px solid var(--border)}',
+      '#gn-player-title{flex:1;color:var(--text);font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+      '#gn-player-close{background:var(--accent);color:#0B0B0F;border:none;border-radius:999px;padding:8px 18px;font-weight:700;font-size:13px;cursor:pointer}',
+      '#gn-player-frame{flex:1;border:none;width:100%;background:#000}',
+      '.game-tabs{display:flex;gap:10px;padding:20px 20px 4px;flex-wrap:wrap}',
+      '.game-tab{background:rgba(16,16,20,0.8);border:1px solid var(--border);color:var(--text);border-radius:999px;padding:9px 22px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}',
+      '.game-tab:hover{border-color:var(--accent)}',
+      '.game-tab.active{background:var(--accent);color:#0B0B0F;border-color:var(--accent)}',
+      '.gpanel{display:none}',
+      '.gpanel.active{display:block}',
+      '#ugs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;padding:0 20px}',
+      '#ugs-count{color:var(--muted);font-size:13px}',
+      '#ugs-search{margin-left:auto;background:rgba(16,16,20,0.8);border:1px solid var(--border);color:var(--text);border-radius:999px;padding:9px 16px;font-size:13px;outline:none;min-width:200px}',
+      '#ugs-search:focus{border-color:var(--accent)}',
+      '.gn-noimg{width:100%;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;font-size:44px;font-weight:800;color:var(--accent);background:linear-gradient(135deg,rgba(108,140,255,0.16),rgba(108,140,255,0.02))}'
+    ].join('\n');
+    var st = document.createElement('style');
+    st.textContent = css;
+    document.head.appendChild(st);
+  } catch (e) {}
+  try {
+    window.initGNView = (function(){
+      var done = false;
+      var all = [];
+      var shown = [];
+      function esc(s){
+        return String(s == null ? '' : s).split('&').join('&amp;').split('<').join('&lt;').split('>').join('&gt;').split('"').join('&quot;');
+      }
+      function render(list){
+        var grid = document.getElementById('gn-grid');
+        if (!grid) return;
+        shown = list;
+        var html = '';
+        for (var i = 0; i < list.length; i++) {
+          var g = list[i];
+          html += '<button class="gn-card" data-gn-i="' + i + '"><img loading="lazy" src="' + esc(g.img) + '" alt="' + esc(g.name) + '" onerror="this.style.display=\'none\'"><span>' + esc(g.name) + '</span></button>';
+        }
+        grid.innerHTML = html;
+        var count = document.getElementById('gn-count');
+        if (count) count.textContent = list.length + ' games';
+      }
+      function openGame(g){
+        var p = document.getElementById('gn-player');
+        var f = document.getElementById('gn-player-frame');
+        var t = document.getElementById('gn-player-title');
+        if (!p || !f) return;
+        if (t) t.textContent = g.name;
+        p.hidden = false;
+        if (typeof fetch !== 'function') { f.src = g.url; return; }
+        fetch(g.url).then(function(r){
+          if (!r.ok) throw new Error('fetch failed');
+          return r.text();
+        }).then(function(html){
+          var base = String(g.url).replace(/[^/]*$/, '');
+          if (!/<base\b/i.test(html)) html = html.replace(/<head(.*?)>/i, '<head$1><base href="' + base + '">');
+          var doc = f.contentDocument || f.contentWindow.document;
+          doc.open();
+          doc.write(html);
+          doc.close();
+        }).catch(function(){ f.src = g.url; });
+      }
+      function closeGame(){
+        var p = document.getElementById('gn-player');
+        var old = document.getElementById('gn-player-frame');
+        if (p) p.hidden = true;
+        if (old && old.parentNode) {
+          try { old.src = 'about:blank'; } catch (e) {}
+          try {
+            var odoc = old.contentDocument || (old.contentWindow && old.contentWindow.document);
+            if (odoc) { odoc.open(); odoc.write(''); odoc.close(); }
+          } catch (e) {}
+          var fresh = document.createElement('iframe');
+          fresh.id = 'gn-player-frame';
+          fresh.setAttribute('allow', 'fullscreen; autoplay; gamepad');
+          fresh.setAttribute('allowfullscreen', '');
+          old.parentNode.replaceChild(fresh, old);
+        }
+      }
+      window.playGameUrl = function(name, url){ openGame({ name: name, url: url }); };
+      return function(){
+        if (done) return; done = true;
+        var grid = document.getElementById('gn-grid');
+        if (grid) grid.addEventListener('click', function(e){
+          var c = e.target.closest ? e.target.closest('[data-gn-i]') : null;
+          if (!c) return;
+          var g = shown[parseInt(c.getAttribute('data-gn-i'), 10)];
+          if (g) openGame(g);
+        });
+        var s = document.getElementById('gn-search');
+        if (s) s.addEventListener('input', function(){
+          var q = s.value.trim().toLowerCase();
+          render(!q ? all : all.filter(function(g){ return g.name.toLowerCase().indexOf(q) !== -1; }));
+        });
+        var cb = document.getElementById('gn-player-close');
+        if (cb) cb.addEventListener('click', closeGame);
+        document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeGame(); });
+        if (typeof fetch !== 'function') return;
+        fetch('https://quantil.jsdelivr.net/gh/freebuisness/assets/zones.json').then(function(r){
+          if (!r.ok) throw new Error('fetch failed');
+          return r.json();
+        }).then(function(d){
+          var list = Array.isArray(d) ? d : [];
+          all = [];
+          for (var i = 0; i < list.length; i++) {
+            var z = list[i] || {};
+            if (z.id === -1 || z.id === undefined) continue;
+            var nm = String(z.name || '').trim();
+            if (!nm || nm.indexOf('[!]') === 0) continue;
+            var gu = String(z.url || '').replace(/\{HTML_URL\}/g, 'https://quantil.jsdelivr.net/gh/freebuisness/html@main').replace(/\{COVER_URL\}/g, 'https://quantil.jsdelivr.net/gh/freebuisness/covers@main').trim();
+            var rc = String(z.cover || '').replace(/\{COVER_URL\}/g, 'https://quantil.jsdelivr.net/gh/freebuisness/covers@main').trim();
+            all.push({ name: nm, img: rc.indexOf('http') === 0 ? rc : ('https://quantil.jsdelivr.net/gh/freebuisness/covers@main' + '/' + rc), url: gu.indexOf('http') === 0 ? gu : ('https://quantil.jsdelivr.net/gh/freebuisness/html@main' + '/' + z.id + '.html') });
+          }
+          render(all);
+        }).catch(function(e){ console.error('[init:gn] load failed:', e && e.message); });
+      };
+    })();
+  } catch (e) { console.error('[init:gn]', e && e.message); }
+  try {
+    window.initUGSView = (function(){
+      var done = false;
+      var all = [];
+      var shown = [];
+      function esc(s){
+        return String(s == null ? '' : s).split('&').join('&amp;').split('<').join('&lt;').split('>').join('&gt;').split('"').join('&quot;');
+      }
+      function render(list){
+        var grid = document.getElementById('ugs-grid');
+        if (!grid) return;
+        shown = list;
+        var html = '';
+        for (var i = 0; i < list.length; i++) {
+          var g = list[i];
+          html += '<button class="gn-card" data-ugs-i="' + i + '"><div class="gn-noimg">' + esc(g.name.charAt(0).toUpperCase()) + '</div><span>' + esc(g.name) + '</span></button>';
+        }
+        grid.innerHTML = html;
+        var count = document.getElementById('ugs-count');
+        if (count) count.textContent = list.length + ' games';
+      }
+      return function(){
+        if (done) return; done = true;
+        var grid = document.getElementById('ugs-grid');
+        if (grid) grid.addEventListener('click', function(e){
+          var c = e.target.closest ? e.target.closest('[data-ugs-i]') : null;
+          if (!c) return;
+          var g = shown[parseInt(c.getAttribute('data-ugs-i'), 10)];
+          if (g && typeof window.playGameUrl === 'function') window.playGameUrl(g.name, g.url);
+        });
+        var s = document.getElementById('ugs-search');
+        if (s) s.addEventListener('input', function(){
+          var q = s.value.trim().toLowerCase();
+          render(!q ? all : all.filter(function(g){ return g.name.toLowerCase().indexOf(q) !== -1; }));
+        });
+        if (typeof fetch !== 'function') return;
+        var repos = ['tharun9772/ugs-1', 'tharun9772/ugs-2', 'tharun9772/ugs-3'];
+        var count = document.getElementById('ugs-count');
+        if (count) count.textContent = 'loading...';
+        Promise.all(repos.map(function(repo){
+          return fetch('https://api.github.com/repos/' + repo + '/contents/').then(function(r){
+            if (!r.ok) throw new Error('fetch failed');
+            return r.json();
+          }).then(function(d){
+            var out = [];
+            var list = Array.isArray(d) ? d : [];
+            for (var i = 0; i < list.length; i++) {
+              var f = list[i] || {};
+              if (f.type === 'file' && f.name.indexOf('cl') === 0 && f.name.slice(-5) === '.html') {
+                out.push({ name: f.name.replace(/^cl/, '').replace('.html', ''), url: 'https://quantil.jsdelivr.net/gh/' + repo + '/' + f.name });
+              }
+            }
+            return out;
+          }).catch(function(){ return []; });
+        })).then(function(parts){
+          var seen = {};
+          all = [];
+          for (var p = 0; p < parts.length; p++) {
+            for (var i = 0; i < parts[p].length; i++) {
+              var g = parts[p][i];
+              if (!seen[g.url]) { seen[g.url] = true; all.push(g); }
+            }
+          }
+          all.sort(function(a, b){ return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1; });
+          render(all);
+        }).catch(function(e){ console.error('[init:ugs] load failed:', e && e.message); });
+      };
+    })();
+    var tabs = document.querySelectorAll('.game-tab');
+    for (var ti = 0; ti < tabs.length; ti++) {
+      (function(b){
+        b.addEventListener('click', function(){
+          var all1 = document.querySelectorAll('.game-tab');
+          for (var i = 0; i < all1.length; i++) all1[i].classList.remove('active');
+          var panels = document.querySelectorAll('.gpanel');
+          for (var j = 0; j < panels.length; j++) panels[j].classList.remove('active');
+          b.classList.add('active');
+          var p = document.getElementById('gpanel-' + b.getAttribute('data-gpanel'));
+          if (p) p.classList.add('active');
+          if (b.getAttribute('data-gpanel') === 'ugs' && typeof window.initUGSView === 'function') {
+            try { window.initUGSView(); } catch (e) { console.error('[init:ugs]', e && e.message); }
+          }
+          window.scrollTo(0, 0);
+        });
+      })(tabs[ti]);
+    }
+  } catch (e) { console.error('[init:ugs]', e && e.message); }
+})();
 </script>
 
 </body>
