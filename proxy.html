@@ -1,0 +1,84 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preview</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #000;
+}
+
+#loader {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity .5s ease;
+}
+
+.loader-circle {
+    width: 42px;
+    height: 42px;
+    border: 4px solid #222;
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+}
+
+iframe {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+    background: #000;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div id="loader">
+    <div class="loader-circle"></div>
+</div>
+
+<iframe
+    src="https://cheerful-pony-748a74.netlify.app/"
+    allow="fullscreen"
+    allowfullscreen>
+</iframe>
+
+<script>
+setTimeout(() => {
+    document.getElementById("loader").style.opacity = "0";
+
+    setTimeout(() => {
+        document.getElementById("loader").remove();
+    }, 500);
+}, 1500);
+</script>
+
+</body>
+</html>
+```
