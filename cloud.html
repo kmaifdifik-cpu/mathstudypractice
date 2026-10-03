@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<title>Stratus API — Cloud Game Streaming for Developers</title>
+<meta name="description" content="A REST API for cloud game streaming. GTA V, Minecraft, Poppy Playtime, and 180+ titles. 720p30, 15-minute sessions, free.">
+<style>
+  :root{
+    --yellow:#D4F000; --bg:#0a0a0a; --surface:#0d0d0d; --border:#1a1a1a;
+    --muted:#777; --dim:#555; --faint:#444;
+  }
+  html{scroll-behavior:smooth}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:#f8fafc;font-family:"Inter",system-ui,-apple-system,sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased}
+  code,pre,.mono{font-family:"JetBrains Mono","Fira Code",ui-monospace,SFMono-Regular,Menlo,monospace}
+  a{text-decoration:none;color:inherit}
+  img{display:block}
+  .wrap{max-width:72rem;margin:0 auto;padding:0 1.5rem}
+  .page{display:none}
+  .page.active{display:block}
+
+  header.nav{position:fixed;top:0;left:0;right:0;z-index:50;border-bottom:1px solid var(--border);background:rgba(10,10,10,.9);backdrop-filter:blur(4px)}
+  .nav-inner{max-width:72rem;margin:0 auto;padding:0 1.5rem;height:3.5rem;display:flex;align-items:center;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:.625rem}
+  .brand .name{font-weight:600;font-size:.875rem;letter-spacing:-.01em;color:#fff}
+  .brand .api{color:#333;font-size:.875rem;font-weight:300}
+  .nav-links{display:none;align-items:center;gap:2rem}
+  .nav-links a{font-size:.875rem;color:#888;transition:color .15s}
+  .nav-links a:hover{color:#fff}
+  @media(min-width:768px){.nav-links{display:flex}}
+  .btn-yellow{display:inline-block;font-size:.75rem;font-weight:600;padding:.5rem 1rem;background:var(--yellow);color:#000;border-radius:.25rem;transition:opacity .15s}
+  .btn-yellow:hover{opacity:.9}
+  .crumb{color:#333}
+  .crumb-label{font-size:.875rem;color:#666}
+
+  .hero{padding-top:3.5rem;min-height:100vh;display:flex;align-items:center}
+  .hero-grid{display:grid;gap:4rem;align-items:center;padding:6rem 0;width:100%}
+  @media(min-width:1024px){.hero-grid{grid-template-columns:1fr 1fr}}
+  .pill{display:inline-flex;align-items:center;gap:.5rem;font-size:.75rem;font-weight:500;color:var(--yellow);border:1px solid rgba(212,240,0,.2);background:rgba(212,240,0,.05);padding:.375rem .75rem;border-radius:.25rem;margin-bottom:2rem}
+  .pill .dot{width:.375rem;height:.375rem;border-radius:50%;background:var(--yellow)}
+  h1{font-size:3rem;font-weight:900;letter-spacing:-.03em;line-height:1;color:#fff;margin-bottom:1.5rem}
+  @media(min-width:768px){h1{font-size:64px}}
+  .hero p.sub{color:#888;font-size:1.125rem;line-height:1.625;margin-bottom:2.5rem;max-width:420px}
+  .hero-actions{display:flex;flex-wrap:wrap;gap:.75rem}
+  .btn-primary{display:inline-flex;align-items:center;gap:.5rem;padding:.625rem 1.25rem;background:var(--yellow);color:#000;font-size:.875rem;font-weight:600;border-radius:.25rem;transition:opacity .15s}
+  .btn-primary:hover{opacity:.9}
+  .btn-ghost{display:inline-flex;align-items:center;gap:.5rem;padding:.625rem 1.25rem;border:1px solid #2a2a2a;color:#fff;font-size:.875rem;font-weight:500;border-radius:.25rem;transition:border-color .15s}
+  .btn-ghost:hover{border-color:#444}
+  .stats{display:flex;gap:2rem;margin-top:3rem;border-top:1px solid var(--border);padding-top:2rem}
+  .stats .val{font-size:1.5rem;font-weight:700;color:#fff;letter-spacing:-.02em}
+  .stats .lbl{font-size:.75rem;color:#555;margin-top:.125rem}
+
+  .codewin{background:var(--surface);border:1px solid #1f1f1f;border-radius:.5rem;overflow:hidden}
+  .codewin-bar{display:flex;align-items:center;gap:.375rem;padding:.75rem 1rem;border-bottom:1px solid var(--border)}
+  .codewin-bar .c{width:.625rem;height:.625rem;border-radius:50%;background:#2a2a2a}
+  .codewin-bar .fname{margin-left:.75rem;color:#3a3a3a;font-size:.75rem}
+  pre.code{padding:1.25rem;overflow-x:auto;font-size:13px;line-height:1.7;white-space:pre}
+
+  .section{padding:6rem 0;border-top:1px solid var(--border)}
+  .eyebrow{font-size:.75rem;font-weight:600;color:var(--yellow);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.75rem}
+  h2.title{font-size:1.875rem;font-weight:700;letter-spacing:-.02em;color:#fff}
+  @media(min-width:768px){h2.title{font-size:2.25rem}}
+  .section header{margin-bottom:3.5rem}
+
+  .grid-3{display:grid;gap:1px;background:var(--border)}
+  @media(min-width:640px){.grid-3{grid-template-columns:1fr 1fr}}
+  @media(min-width:1024px){.grid-3{grid-template-columns:1fr 1fr 1fr}}
+  .card{background:var(--bg);padding:1.75rem}
+  .card .icon{width:2rem;height:2rem;border-radius:.25rem;display:flex;align-items:center;justify-content:center;color:var(--yellow);margin-bottom:1rem;border:1px solid rgba(212,240,0,.15);background:rgba(212,240,0,.05)}
+  .card h3{font-weight:600;color:#fff;margin-bottom:.5rem}
+  .card p{font-size:.875rem;color:#666;line-height:1.625}
+  .step-num{font-size:3rem;font-weight:900;color:#1e1e1e;line-height:1;display:block;margin-bottom:1.5rem;user-select:none}
+  .step-detail{font-size:.75rem;color:#444;line-height:1.625;margin-top:1rem;font-family:"JetBrains Mono",ui-monospace,monospace}
+
+  .tabbox{border:1px solid var(--border);border-radius:.5rem;overflow:hidden}
+  .tabbar{display:flex;align-items:center;border-bottom:1px solid var(--border);background:var(--surface)}
+  .tabbtn{padding:.75rem 1.25rem;font-size:.75rem;font-weight:500;background:none;border:none;border-bottom:2px solid transparent;color:#555;cursor:pointer;transition:color .15s;margin-bottom:-1px;font-family:inherit}
+  .tabbtn:hover{color:#999}
+  .tabbtn.active{border-bottom-color:var(--yellow);color:#fff}
+  .tabpane{display:none;padding:1.5rem;overflow-x:auto;font-size:13px;line-height:1.7;background:var(--bg);white-space:pre}
+  .tabpane.active{display:block}
+
+  .endpoints{display:grid;gap:1rem;margin-top:2rem}
+  @media(min-width:640px){.endpoints{grid-template-columns:repeat(3,1fr)}}
+  .endpoint{border:1px solid var(--border);border-radius:.25rem;padding:1rem}
+  .endpoint code{font-size:.75rem;color:var(--yellow);display:block;margin-bottom:.375rem}
+  .endpoint p{font-size:.75rem;color:#555;line-height:1.625}
+
+  footer.site{border-top:1px solid var(--border);padding:3rem 0}
+  .foot-inner{display:flex;flex-direction:column;gap:1.5rem;align-items:flex-start}
+  @media(min-width:640px){.foot-inner{flex-direction:row;align-items:center;justify-content:space-between}}
+  .foot-brand{display:flex;align-items:center;gap:.625rem;font-size:.875rem;font-weight:600;color:#444}
+  .foot-links{display:flex;flex-wrap:wrap;gap:1.5rem}
+  .foot-links a{font-size:.75rem;color:#444;transition:color .15s}
+  .foot-links a:hover{color:#888}
+  .copyright{font-size:.75rem;color:#2a2a2a}
+
+  .docs-layout{max-width:72rem;margin:0 auto;padding:3.5rem 1.5rem 0;display:flex;gap:3rem}
+  aside.sidebar{display:none;width:13rem;flex-shrink:0}
+  @media(min-width:1024px){aside.sidebar{display:block}}
+  .sidebar nav{position:sticky;top:5rem}
+  .side-group{margin-bottom:1.5rem}
+  .side-group>p{font-size:10px;font-weight:600;color:#444;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem}
+  .side-group a{display:block;font-size:.875rem;padding:.375rem .5rem;border-radius:.25rem;color:#555;transition:color .15s,background .15s}
+  .side-group a:hover{color:#999}
+  .side-group a.active{color:var(--yellow);background:rgba(212,240,0,.05)}
+  main.docs{flex:1;min-width:0;padding:1rem 0}
+  .doc-section{padding:3rem 0;border-bottom:1px solid #111;scroll-margin-top:5rem}
+  .doc-section h2{font-size:1.25rem;font-weight:700;color:#fff;margin-bottom:.25rem}
+  .doc-rule{width:2rem;height:1px;background:var(--yellow);margin-bottom:2rem}
+  .doc-p{color:#777;line-height:1.625;margin-bottom:1rem;font-size:.875rem}
+  .doc-p a{color:var(--yellow)}
+  .doc-p a:hover{text-decoration:underline}
+  .ic{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.75rem;color:var(--yellow);background:rgba(212,240,0,.05);border:1px solid rgba(212,240,0,.15);padding:.125rem .375rem;border-radius:.25rem}
+  .endpoint-bar{display:flex;align-items:center;gap:.75rem;font-size:.875rem;background:var(--surface);border:1px solid var(--border);border-radius:.5rem;padding:.75rem 1rem;margin-bottom:1.5rem}
+  .method{font-size:.75rem;font-weight:700;padding:.125rem .5rem;border-radius:.25rem;border:1px solid}
+  .m-get{color:#34d399;background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.2)}
+  .m-post{color:#60a5fa;background:rgba(96,165,250,.1);border-color:rgba(96,165,250,.2)}
+  .m-ws{color:#a78bfa;background:rgba(167,139,250,.1);border-color:rgba(167,139,250,.2)}
+  .endpoint-bar .path{color:#888;font-size:.875rem}
+  .table-label{font-size:.75rem;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem}
+  .table{border:1px solid var(--border);border-radius:.5rem;overflow:hidden;margin-bottom:2rem}
+  .trow{display:grid;gap:1rem;padding:.75rem 1rem}
+  .trow+.trow{border-top:1px solid var(--border)}
+  .trow-cols{grid-template-columns:160px 1fr}
+  .trow-cols-wide{grid-template-columns:200px 1fr}
+  .trow-cols-err{grid-template-columns:60px 160px 1fr}
+  .trow .req{font-size:10px;font-weight:600;color:rgba(248,113,113,.7);border:1px solid rgba(248,113,113,.2);background:rgba(248,113,113,.05);padding:0 .25rem;border-radius:.25rem;line-height:1rem;margin-left:.5rem}
+  .trow .ptype{font-size:.75rem;color:#555;margin-right:.5rem}
+  .trow .pdesc{font-size:.875rem;color:#777}
+  .trow .pname{font-size:.75rem;color:#f1f5f9}
+  .trow .estatus{font-size:.75rem;color:var(--yellow)}
+  .trow .ecode{font-size:.75rem;color:#f87171}
+  .trow .extra{font-size:.75rem;color:#444;margin-top:.25rem}
+  .pre-block{background:var(--surface);border:1px solid var(--border);border-radius:.5rem;padding:1.25rem;overflow-x:auto;font-size:13px;line-height:1.75;margin-bottom:1rem;white-space:pre}
+  .kv-grid{display:grid;gap:1rem;margin-bottom:1.5rem}
+  @media(min-width:640px){.kv-grid{grid-template-columns:1fr 1fr}}
+  .kv{border:1px solid var(--border);border-radius:.5rem;padding:1rem}
+  .kv .k{font-size:.75rem;color:#444;margin-bottom:.25rem}
+  .kv code{font-size:.75rem;color:#888}
+  .sig-grid{display:grid;gap:1rem;margin-bottom:2rem}
+  @media(min-width:640px){.sig-grid{grid-template-columns:1fr 1fr}}
+  .sig-grid .cell{padding:.75rem 1rem}
+  .sig-grid .cell+.cell{border-top:1px solid var(--border)}
+  .sig-grid code.t{font-size:.75rem;display:block;margin-bottom:.25rem}
+  .sig-grid .d{font-size:.75rem;color:#555}
+  .t-blue{color:#60a5fa}.t-green{color:#34d399}
+
+  .reveal{opacity:0;transform:translateY(1.5rem);transition:opacity .7s,transform .7s}
+  .reveal.visible{opacity:1;transform:translateY(0)}
+  @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+<base target="_blank">
+</head>
+<body>
+
+<!-- LANDING PAGE -->
+<div class="page" id="page-home">
+  <header class="nav">
+    <div class="nav-inner">
+      <a href="#/" class="brand" aria-label="Stratus API home">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D4F000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.5 19a4.5 4.5 0 0 0 .38-8.98 7 7 0 0 0-13.36 1.88A4 4 0 0 0 7 19h10.5z"/></svg>
+        <span class="name">Stratus</span><span class="api">API</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How it works</a>
+        <a href="#quickstart">Quickstart</a>
+        <a href="#/docs">Docs</a>
+      </nav>
+      <a href="mailto:channelediting521@gmail.com" class="btn-yellow">Get API Key</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" aria-label="Hero">
+      <div class="wrap hero-grid">
+        <div>
+          <div class="pill"><span class="dot"></span>Free · No credit card required</div>
+          <h1>Cloud game<br>streaming for<br>developers.</h1>
+          <p class="sub">A REST API that provisions cloud gaming sessions for 180+ titles — GTA V, Minecraft: Dungeons, Poppy Playtime, and more. Handle WebRTC, session lifecycle, and TURN infrastructure with a single POST request.</p>
+          <div class="hero-actions">
+            <a href="mailto:channelediting521@gmail.com" class="btn-primary">Request API Access</a>
+            <a href="#how-it-works" class="btn-ghost">See how it works</a>
+          </div>
+          <dl class="stats">
+            <div><div class="val">180+</div><div class="lbl">games</div></div>
+            <div><div class="val">720p30</div><div class="lbl">everywhere</div></div>
+            <div><div class="val">15 min</div><div class="lbl">sessions</div></div>
+          </dl>
+        </div>
+        <div>
+          <div class="codewin">
+            <div class="codewin-bar"><span class="c"></span><span class="c"></span><span class="c"></span><span class="fname">createSession.js</span></div>
+            <pre class="code"><code data-lang="js">const res = await fetch(
+  "https://api.stratus.lol/cloud/v1/createSession",
+  {
+    method: "POST",
+    headers: {
+      "x-api-key": "sk_live_xxxxxxxxxxxxxxxx",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      game_key: "gta_v",
+    }),
+  }
+);
+
+// Stream NDJSON status events
+for await (const event of streamNDJSON(res)) {
+  if (event.status === "finished_queue") {
+    const { ice_servers, signaling_ws } =
+      await post("/cloud/v1/startGame", { uuid: event.uuid });
+    // Connect your WebRTC client
+  }
+}</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="section reveal" aria-labelledby="features-heading">
+      <div class="wrap">
+        <header>
+          <p class="eyebrow">Features</p>
+          <h2 class="title" id="features-heading">Everything you need to ship.</h2>
+        </header>
+        <ul class="grid-3" role="list" style="list-style:none">
+          <li class="card"><div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div><h3>180+ Games</h3><p>GTA V, Minecraft: Dungeons, Minecraft: Legends, Poppy Playtime ch. 1–4, and a growing library — all through one API.</p></li>
+          <li class="card"><div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div><h3>720p30 Everywhere</h3><p>Hardware-accelerated WebRTC streaming that runs smooth at 720p30 even on low-end and mobile hardware.</p></li>
+          <li class="card"><div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div><h3>15-Minute Sessions</h3><p>Clean, bounded session lifecycle with automatic cleanup. No runaway processes or leaked resources.</p></li>
+          <li class="card"><div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div><h3>Free to Use</h3><p>No credit card. No monthly bill. Generous rate limits per API key — start building without spending a cent.</p></li>
+          <li class="card"><div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><h3>Fast Session Start</h3><p>Sessions provision in seconds. Google STUN + TURN relay coverage keeps latency low across regions.</p></li>
+          <li class="card"><div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div><h3>Developer-First API</h3><p>Plain HTTP endpoints, NDJSON streaming events, and a WebSocket signaling proxy. No proprietary SDK required.</p></li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="how-it-works" class="section reveal" aria-labelledby="how-heading">
+      <div class="wrap">
+        <header>
+          <p class="eyebrow">How it works</p>
+          <h2 class="title" id="how-heading">From zero to streaming in three steps.</h2>
+        </header>
+        <ol class="grid-3" style="list-style:none">
+          <li class="card"><span class="step-num">01</span><h3>Get your API key</h3><p>Request access and receive an API key. No approval queue — keys are issued immediately.</p><p class="step-detail">Your key is sent with every request via the x-api-key header.</p></li>
+          <li class="card"><span class="step-num">02</span><h3>Create a session</h3><p>POST to /cloud/v1/createSession with a game_key. Read the NDJSON response stream as the session boots.</p><p class="step-detail">Events: creating_account → account_ready → requesting_game → queue → finished_queue</p></li>
+          <li class="card"><span class="step-num">03</span><h3>Stream via WebRTC</h3><p>Call /cloud/v1/startGame to get ICE servers and a signaling WebSocket URL.</p><p class="step-detail">Connect your WebRTC peer. The signaling proxy handles SDP offer/answer and ICE candidates.</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="quickstart" class="section reveal" aria-labelledby="qs-heading">
+      <div class="wrap">
+        <header>
+          <p class="eyebrow">Quickstart</p>
+          <h2 class="title" id="qs-heading">Up and running in minutes.</h2>
+        </header>
+        <div class="tabbox">
+          <div class="tabbar">
+            <button class="tabbtn active" data-tab="js">JavaScript</button>
+            <button class="tabbtn" data-tab="curl">cURL</button>
+          </div>
+          <pre class="tabpane active" id="tab-js"><code data-lang="js">async function launchGame(apiKey, gameKey) {
+  // 1. Create session — read NDJSON stream
+  const res = await fetch(
+    "https://api.stratus.lol/cloud/v1/createSession",
+    {
+      method: "POST",
+      headers: {
+        "x-api-key": apiKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ game_key: gameKey }),
+    }
+  );
+
+  let sessionUuid = null;
+  for await (const event of streamNDJSON(res)) {
+    if (event.status === "finished_queue") {
+      sessionUuid = event.uuid;
+      break;
+    }
+    if (event.status === "error") throw new Error(event.error);
+  }
+
+  // 2. Start game — receive WebRTC credentials
+  const { ice_servers, signaling_ws } = await fetch(
+    "https://api.stratus.lol/cloud/v1/startGame",
+    {
+      method: "POST",
+      headers: { "x-api-key": apiKey, "Content-Type": "application/json" },
+      body: JSON.stringify({ uuid: sessionUuid }),
+    }
+  ).then(r => r.json());
+
+  // 3. Connect WebRTC using ice_servers + signaling_ws
+  return connectWebRTC({ ice_servers, signaling_ws });
+}</code></pre>
+          <pre class="tabpane" id="tab-curl"><code data-lang="bash"># 1. Create a session (streams NDJSON events)
+curl -X POST https://api.stratus.lol/cloud/v1/createSession \
+  -H "x-api-key: sk_live_xxxxxxxxxxxxxxxx" \
+  -H "Content-Type: application/json" \
+  -d '{"game_key": "gta_v"}'
+
+# Example response stream:
+# {"status":"creating_account"}
+# {"status":"account_ready"}
+# {"status":"requesting_game"}
+# {"status":"finished_queue","uuid":"7f3a2c...","fetch_this_within_30s_or_terminate":"/cloud/v1/startGame"}
+
+# 2. Start the game — get WebRTC credentials
+curl -X POST https://api.stratus.lol/cloud/v1/startGame \
+  -H "x-api-key: sk_live_xxxxxxxxxxxxxxxx" \
+  -H "Content-Type: application/json" \
+  -d '{"uuid": "7f3a2c..."}'
+
+# {"ice_servers":[...],"signaling_ws":"wss://...","max_seconds":900}</code></pre>
+        </div>
+        <div class="endpoints">
+          <div class="endpoint"><code>POST /cloud/v1/createSession</code><p>Provisions a new session, streams status events</p></div>
+          <div class="endpoint"><code>POST /cloud/v1/startGame</code><p>Activates session, returns WebRTC credentials</p></div>
+          <div class="endpoint"><code>POST /cloud/v1/pingSession</code><p>Keepalive ping + quota usage stats</p></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site" role="contentinfo">
+    <div class="wrap foot-inner">
+      <div class="foot-brand">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4F000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.6" aria-hidden="true"><path d="M17.5 19a4.5 4.5 0 0 0 .38-8.98 7 7 0 0 0-13.36 1.88A4 4 0 0 0 7 19h10.5z"/></svg>
+        Stratus API
+      </div>
+      <nav class="foot-links" aria-label="Footer">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How it works</a>
+        <a href="#quickstart">Quickstart</a>
+        <a href="mailto:channelediting521@gmail.com">Contact</a>
+      </nav>
+      <p class="copyright">© <span id="year"></span> Stratus API</p>
+    </div>
+  </footer>
+</div>
+
+<!-- DOCS PAGE -->
+<div class="page" id="page-docs">
+  <header class="nav">
+    <div class="nav-inner">
+      <div style="display:flex;align-items:center;gap:1rem">
+        <a href="#/" class="brand" aria-label="Stratus API home">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D4F000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.5 19a4.5 4.5 0 0 0 .38-8.98 7 7 0 0 0-13.36 1.88A4 4 0 0 0 7 19h10.5z"/></svg>
+          <span class="name">Stratus</span><span class="api">API</span>
+        </a>
+        <span class="crumb">/</span><span class="crumb-label">Docs</span>
+      </div>
+      <a href="mailto:channelediting521@gmail.com" class="btn-yellow">Get API Key</a>
+    </div>
+  </header>
+
+  <div class="docs-layout">
+    <aside class="sidebar">
+      <nav aria-label="Documentation">
+        <div class="side-group"><p>Getting Started</p>
+          <a href="#overview" data-spy="overview">Overview</a>
+          <a href="#authentication" data-spy="authentication">Authentication</a>
+          <a href="#session-lifecycle" data-spy="session-lifecycle">Session Lifecycle</a>
+        </div>
+        <div class="side-group"><p>Endpoints</p>
+          <a href="#create-session" data-spy="create-session">createSession</a>
+          <a href="#get-queue" data-spy="get-queue">getQueue</a>
+          <a href="#start-game" data-spy="start-game">startGame</a>
+          <a href="#ping-session" data-spy="ping-session">pingSession</a>
+          <a href="#quit-session" data-spy="quit-session">quitSession</a>
+        </div>
+        <div class="side-group"><p>Advanced</p>
+          <a href="#signaling" data-spy="signaling">WebRTC Signaling</a>
+          <a href="#embed" data-spy="embed">Embed</a>
+          <a href="#rate-limits" data-spy="rate-limits">Rate Limits</a>
+          <a href="#errors" data-spy="errors">Errors</a>
+        </div>
+      </nav>
+    </aside>
+
+    <main class="docs">
+      <section class="doc-section" id="overview">
+        <h2>Overview</h2><div class="doc-rule"></div>
+        <p class="doc-p">Stratus API provisions cloud gaming sessions and returns WebRTC credentials so you can stream games directly to your users. You supply a <span class="ic">game_key</span>, the API handles account creation, session queuing, and TURN infrastructure.</p>
+        <p class="doc-p">The library covers 180+ titles including GTA V, Minecraft: Dungeons, Minecraft: Legends, and Poppy Playtime chapters 1–4.</p>
+        <div class="kv-grid">
+          <div class="kv"><p class="k">Base URL</p><code>https://api.stratus.lol</code></div>
+          <div class="kv"><p class="k">Auth header</p><code>x-api-key: sk_live_...</code></div>
+          <div class="kv"><p class="k">Session limit</p><code>15 minutes max</code></div>
+          <div class="kv"><p class="k">Content-Type</p><code>application/json</code></div>
+        </div>
+      </section>
+
+      <section class="doc-section" id="authentication">
+        <h2>Authentication</h2><div class="doc-rule"></div>
+        <p class="doc-p">Every request must include your API key in the <span class="ic">x-api-key</span> request header. Keys are bound to a single site and carry their own rate limits and session caps.</p>
+        <pre class="pre-block"><code data-lang="js">// Header format
+x-api-key: sk_live_xxxxxxxxxxxxxxxx
+
+// Or as a query param (not recommended)
+GET /cloud/v1/getQueue?uuid=...&amp;api_key=sk_live_...</code></pre>
+        <p class="doc-p">Missing or invalid keys return <span class="ic">401</span>. Disabled keys return <span class="ic">403</span>.</p>
+      </section>
+
+      <section class="doc-section" id="session-lifecycle">
+        <h2>Session Lifecycle</h2><div class="doc-rule"></div>
+        <p class="doc-p">A session moves through a fixed set of states. The typical path from cold start to active stream:</p>
+        <pre class="pre-block"><code data-lang="txt">createSession  →  [stream NDJSON events]
+                   creating_account
+                   account_ready
+                   requesting_game
+                   queue  (if server is full — poll getQueue)
+                   finished_queue  ←────────────────┐
+                                                    │
+startGame  (must call within 30 s)  ────────────────►┘
+  └─ returns ice_servers + signaling_ws
+
+[WebRTC connect via signaling WebSocket]
+
+pingSession  (call every &lt;30 s to keep session alive)
+
+quitSession  (explicit teardown)</code></pre>
+        <p class="doc-p">Sessions that exceed the 15-minute limit are terminated automatically. Failing to ping within 30 seconds also terminates the session.</p>
+      </section>
+
+      <section class="doc-section" id="create-session">
+        <h2>createSession</h2><div class="doc-rule"></div>
+        <div class="endpoint-bar"><span class="method m-post">POST</span><span class="path">/cloud/v1/createSession</span></div>
+        <p class="doc-p">Provisions a new cloud gaming session. The response body is an NDJSON stream — each line is a JSON object describing the current provisioning state. Read the stream line-by-line until you receive <span class="ic">finished_queue</span>, then call <span class="ic">startGame</span>.</p>
+        <p class="table-label">Request headers</p>
+        <div class="table">
+          <div class="trow trow-cols"><div><code class="pname">x-api-key</code><span class="req">req</span></div><div><span class="ptype">string</span><span class="pdesc">Your API key.</span></div></div>
+          <div class="trow trow-cols"><div><code class="pname">Content-Type</code><span class="req">req</span></div><div><span class="ptype">string</span><span class="pdesc">Must be application/json.</span></div></div>
+        </div>
+        <p class="table-label">Request body</p>
+        <div class="table">
+          <div class="trow trow-cols"><div><code class="pname">game_key</code><span class="req">req</span></div><div><span class="ptype">string</span><span class="pdesc">Identifier for the title to launch.</span></div></div>
+        </div>
+        <p class="table-label">NDJSON events</p>
+        <div class="table">
+          <div class="trow trow-cols"><code class="estatus">creating_account</code><div><span class="pdesc">Backend account is being provisioned.</span></div></div>
+          <div class="trow trow-cols"><code class="estatus">account_ready</code><div><span class="pdesc">Account ready, requesting game slot.</span></div></div>
+          <div class="trow trow-cols"><code class="estatus">requesting_game</code><div><span class="pdesc">Requesting a game server.</span></div></div>
+          <div class="trow trow-cols"><code class="estatus">queue</code><div><span class="pdesc">Server is full — session is queued.</span><p class="extra">{ uuid, queue_pos: number }</p></div></div>
+          <div class="trow trow-cols"><code class="estatus">finished_queue</code><div><span class="pdesc">Game slot acquired. Call startGame within 30 s.</span><p class="extra">{ uuid, fetch_this_within_30s_or_terminate }</p></div></div>
+          <div class="trow trow-cols"><code class="estatus">error</code><div><span class="pdesc">Provisioning failed.</span><p class="extra">{ error: string }</p></div></div>
+        </div>
+        <pre class="pre-block"><code data-lang="js">const res = await fetch(
+  "https://api.stratus.lol/cloud/v1/createSession",
+  {
+    method: "POST",
+    headers: {
+      "x-api-key": "sk_live_xxxxxxxxxxxxxxxx",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ game_key: "gta_v" }),
+  }
+);
+
+const reader = res.body.getReader();
+const dec = new TextDecoder();
+
+while (true) {
+  const { value, done } = await reader.read();
+  if (done) break;
+  const event = JSON.parse(dec.decode(value));
+
+  if (event.status === "queue") {
+    console.log("Queue position:", event.queue_pos);
+    // poll getQueue every 3-5 s
+  }
+  if (event.status === "finished_queue") {
+    await startGame(event.uuid); // see startGame
+    break;
+  }
+  if (event.status === "error") {
+    throw new Error(event.error);
+  }
+}</code></pre>
+      </section>
+
+      <section class="doc-section" id="get-queue">
+        <h2>getQueue</h2><div class="doc-rule"></div>
+        <div class="endpoint-bar"><span class="method m-get">GET</span><span class="path">/cloud/v1/getQueue?uuid=UUID</span></div>
+        <p class="doc-p">Poll the queue position for a session that received a <span class="ic">queue</span> event from <span class="ic">createSession</span>. Call at most once every 3 seconds — faster polling returns <span class="ic">429</span>. You must poll at least once every 60 seconds or the session is abandoned.</p>
+        <p class="table-label">Query parameters</p>
+        <div class="table">
+          <div class="trow trow-cols"><div><code class="pname">uuid</code><span class="req">req</span></div><div><span class="ptype">string</span><span class="pdesc">Session UUID from the queue event.</span></div></div>
+        </div>
+        <pre class="pre-block"><code data-lang="js">// Returns one of two shapes:
+
+// Still queued
+{ "status": "queue", "queue_pos": 3 }
+
+// Ready — call startGame within 30 s
+{
+  "status": "finished_queue",
+  "uuid": "7f3a2c...",
+  "fetch_this_within_30s_or_terminate": "/cloud/v1/startGame"
+}</code></pre>
+      </section>
+
+      <section class="doc-section" id="start-game">
+        <h2>startGame</h2><div class="doc-rule"></div>
+        <div class="endpoint-bar"><span class="method m-post">POST</span><span class="path">/cloud/v1/startGame</span></div>
+        <p class="doc-p">Activates the session and returns WebRTC credentials. Must be called within 30 seconds of receiving a <span class="ic">finished_queue</span> event, or the session is terminated.</p>
+        <p class="table-label">Request body</p>
+        <div class="table">
+          <div class="trow trow-cols"><div><code class="pname">uuid</code><span class="req">req</span></div><div><span class="ptype">string</span><span class="pdesc">Session UUID from finished_queue.</span></div></div>
+        </div>
+        <pre class="pre-block"><code data-lang="js">// Response
+{
+  "ice_servers": [
+    { "urls": "stun:stun.l.google.com:19302" },
+    {
+      "urls": "turn:...",
+      "username": "...",
+      "credential": "..."
+    }
+  ],
+  "signaling_ws": "wss://api.stratus.lol/cloud/v1/signal/7f3a2c...",
+  "max_seconds": 900
+}</code></pre>
+        <p class="doc-p">Use <span class="ic">ice_servers</span> to configure your <span class="ic">RTCPeerConnection</span> and connect to <span class="ic">signaling_ws</span> to begin the WebRTC handshake. See <a href="#signaling">WebRTC Signaling</a>.</p>
+      </section>
+
+      <section class="doc-section" id="ping-session">
+        <h2>pingSession</h2><div class="doc-rule"></div>
+        <div class="endpoint-bar"><span class="method m-post">POST</span><span class="path">/cloud/v1/pingSession</span></div>
+        <p class="doc-p">Keepalive ping for an active session. The server terminates any session that goes 30 seconds without a ping. Call this in a tight loop (every 10–20 s is ideal). Also returns current quota usage and session time.</p>
+        <p class="table-label">Request body</p>
+        <div class="table">
+          <div class="trow trow-cols"><div><code class="pname">uuid</code><span class="req">req</span></div><div><span class="ptype">string</span><span class="pdesc">Active session UUID.</span></div></div>
+        </div>
+        <pre class="pre-block"><code data-lang="js">// Response
+{
+  "session_time_used_seconds": 42,
+  "session_time_limit_seconds": 900,
+  "quota": {
+    "minute": { "used": 1,  "limit": 10  },
+    "hour":   { "used": 3,  "limit": 60  },
+    "day":    { "used": 3,  "limit": 200 },
+    "month":  { "used": 3,  "limit": 1000 }
+  }
+}</code></pre>
+        <pre class="pre-block"><code data-lang="js">// Keepalive loop
+async function keepAlive(apiKey, uuid) {
+  const interval = setInterval(async () => {
+    const { session_time_used_seconds, session_time_limit_seconds } =
+      await post("/cloud/v1/pingSession", { uuid });
+
+    if (session_time_used_seconds >= session_time_limit_seconds) {
+      clearInterval(interval);
+      onSessionEnd();
+    }
+  }, 15_000);
+
+  return () => clearInterval(interval);
+}</code></pre>
+      </section>
+
+      <section class="doc-section" id="quit-session">
+        <h2>quitSession</h2><div class="doc-rule"></div>
+        <div class="endpoint-bar"><span class="method m-post">POST</span><span class="path">/cloud/v1/quitSession</span></div>
+        <p class="doc-p">Explicitly terminates a session and frees the cloud instance. Call this when the user is done — do not rely solely on the session timeout to clean up.</p>
+        <p class="table-label">Request body</p>
+        <div class="table">
+          <div class="trow trow-cols"><div><code class="pname">uuid</code><span class="req">req</span></div><div><span class="ptype">string</span><span class="pdesc">Session UUID to terminate.</span></div></div>
+        </div>
+        <pre class="pre-block"><code data-lang="js">// Response
+{ "status": "ok" }</code></pre>
+      </section>
+
+      <section class="doc-section" id="signaling">
+        <h2>WebRTC Signaling</h2><div class="doc-rule"></div>
+        <div class="endpoint-bar"><span class="method m-ws">WS</span><span class="path">/cloud/v1/signal/:uuid</span></div>
+        <p class="doc-p">WebSocket endpoint that proxies WebRTC signaling between your client and the game server. Connect using the <span class="ic">signaling_ws</span> URL returned by <span class="ic">startGame</span>. Wait for the <span class="ic">game_ready</span> event before sending your offer.</p>
+        <div class="sig-grid">
+          <div>
+            <p class="table-label">Client → Server</p>
+            <div class="table" style="margin-bottom:0">
+              <div class="cell"><code class="t t-blue">rtc_offer</code><p class="d">SDP offer: { type: "rtc_offer", sdp: string }</p></div>
+              <div class="cell"><code class="t t-blue">rtc_candidate</code><p class="d">ICE candidate: { type: "rtc_candidate", candidate: string }</p></div>
+            </div>
+          </div>
+          <div>
+            <p class="table-label">Server → Client</p>
+            <div class="table" style="margin-bottom:0">
+              <div class="cell"><code class="t t-green">game_ready</code><p class="d">Game server is ready. Send your SDP offer now.</p></div>
+              <div class="cell"><code class="t t-green">rtc_answer</code><p class="d">SDP answer: { type: "rtc_answer", sdp: object }</p></div>
+              <div class="cell"><code class="t t-green">rtc_candidate</code><p class="d">ICE candidate: { type: "rtc_candidate", candidate: string }</p></div>
+            </div>
+          </div>
+        </div>
+        <pre class="pre-block"><code data-lang="js">const pc = new RTCPeerConnection({ iceServers: ice_servers });
+const ws = new WebSocket(signaling_ws);
+
+ws.addEventListener("message", async (e) => {
+  const msg = JSON.parse(e.data);
+
+  if (msg.type === "game_ready") {
+    // Add video track receiver before creating offer
+    pc.addTransceiver("video", { direction: "recvonly" });
+    pc.addTransceiver("audio", { direction: "recvonly" });
+
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    ws.send(JSON.stringify({ type: "rtc_offer", sdp: offer.sdp }));
+  }
+
+  if (msg.type === "rtc_answer") {
+    await pc.setRemoteDescription(
+      new RTCSessionDescription({ type: "answer", sdp: msg.sdp.sdp })
+    );
+  }
+
+  if (msg.type === "rtc_candidate") {
+    await pc.addIceCandidate(new RTCIceCandidate({ candidate: msg.candidate }));
+  }
+});
+
+pc.addEventListener("icecandidate", (e) => {
+  if (e.candidate) {
+    ws.send(JSON.stringify({ type: "rtc_candidate", candidate: e.candidate.candidate }));
+  }
+});
+
+pc.addEventListener("track", (e) => {
+  videoElement.srcObject = e.streams[0];
+});</code></pre>
+      </section>
+
+      <section class="doc-section" id="embed">
+        <h2>Embed</h2><div class="doc-rule"></div>
+        <p class="doc-p">For a zero-integration option, use the embed endpoints to drop an active session into an iframe. The session must already be active (i.e. <span class="ic">startGame</span> has been called).</p>
+        <div class="endpoint-bar"><span class="method m-get">GET</span><span class="path">/cloud/v1/embed?id=UUID</span></div>
+        <p class="doc-p">Returns an HTML page that handles WebRTC internally. Embed it as an iframe:</p>
+        <pre class="pre-block"><code data-lang="html">&lt;iframe
+  src="https://api.stratus.lol/cloud/v1/embed?id=SESSION_UUID"
+  width="1280"
+  height="720"
+  allow="autoplay; fullscreen"
+  style="border: none;"
+/&gt;</code></pre>
+        <div class="endpoint-bar"><span class="method m-get">GET</span><span class="path">/cloud/v1/embed-data?id=UUID</span></div>
+        <p class="doc-p">Returns the raw <span class="ic">ice_servers</span> and <span class="ic">signaling_ws</span> for a session — useful for building custom embed pages. Rate-limited to 30 requests per minute per IP.</p>
+        <pre class="pre-block"><code data-lang="js">// Response
+{
+  "ice_servers":  [...],
+  "signaling_ws": "wss://api.stratus.lol/cloud/v1/signal/..."
+}</code></pre>
+      </section>
+
+      <section class="doc-section" id="rate-limits">
+        <h2>Rate Limits</h2><div class="doc-rule"></div>
+        <p class="doc-p">Rate limits are applied at two levels: per API key (configurable per-site) and per IP.</p>
+        <p class="table-label">Per API key</p>
+        <div class="table">
+          <div class="trow trow-cols"><code class="estatus">per_minute</code><span class="pdesc">Requests per 60-second window</span></div>
+          <div class="trow trow-cols"><code class="estatus">per_hour</code><span class="pdesc">Requests per 60-minute window</span></div>
+          <div class="trow trow-cols"><code class="estatus">per_day</code><span class="pdesc">Requests per 24-hour window</span></div>
+          <div class="trow trow-cols"><code class="estatus">per_month</code><span class="pdesc">Requests per 30-day window</span></div>
+        </div>
+        <p class="table-label">Per IP</p>
+        <div class="table">
+          <div class="trow trow-cols-wide"><code class="pname">All endpoints</code><span class="pdesc">100 requests / minute</span></div>
+          <div class="trow trow-cols-wide"><code class="pname">embed-data</code><span class="pdesc">30 requests / minute</span></div>
+          <div class="trow trow-cols-wide"><code class="pname">getQueue / ping</code><span class="pdesc">1 request / 3 seconds per session</span></div>
+        </div>
+        <p class="doc-p">When exceeded, responses return <span class="ic">429</span> with a JSON body describing the limit hit. Current usage is visible in every <span class="ic">pingSession</span> response.</p>
+      </section>
+
+      <section class="doc-section" id="errors">
+        <h2>Errors</h2><div class="doc-rule"></div>
+        <p class="doc-p">All error responses use standard HTTP status codes and return a JSON body:</p>
+        <pre class="pre-block"><code data-lang="js">{ "error": "Human-readable description." }</code></pre>
+        <div class="table">
+          <div class="trow trow-cols-err"><code class="ecode">400</code><code class="pname">Bad Request</code><span class="pdesc">Missing or malformed parameters.</span></div>
+          <div class="trow trow-cols-err"><code class="ecode">401</code><code class="pname">Unauthorized</code><span class="pdesc">Missing or invalid x-api-key.</span></div>
+          <div class="trow trow-cols-err"><code class="ecode">403</code><code class="pname">Forbidden</code><span class="pdesc">API key is disabled, or session belongs to a different key.</span></div>
+          <div class="trow trow-cols-err"><code class="ecode">404</code><code class="pname">Not Found</code><span class="pdesc">Session UUID not found or has expired.</span></div>
+          <div class="trow trow-cols-err"><code class="ecode">408</code><code class="pname">Request Timeout</code><span class="pdesc">Request took longer than 30 seconds.</span></div>
+          <div class="trow trow-cols-err"><code class="ecode">429</code><code class="pname">Too Many Requests</code><span class="pdesc">Rate limit or concurrent session cap exceeded.</span></div>
+          <div class="trow trow-cols-err"><code class="ecode">500</code><code class="pname">Server Error</code><span class="pdesc">Unexpected failure during session provisioning.</span></div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+document.getElementById('year').textContent = new Date().getFullYear();
+
+const KW = new Set(["const","let","var","async","await","return","if","else","for","of","while","true","false","null","new","import","from","export","break","function","throw"]);
+function escapeHtml(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function highlight(code){
+  let s = code, out = "";
+  while(s.length){
+    if(s.startsWith("//")){
+      const end = s.indexOf("\n");
+      const text = end === -1 ? s : s.slice(0,end);
+      out += '<span style="color:#4b5563">'+escapeHtml(text)+'</span>';
+      s = end === -1 ? "" : s.slice(end);
+      continue;
+    }
+    if(s.startsWith("#") && !/^#[0-9a-fA-F]/.test(s)){
+      const end = s.indexOf("\n");
+      const text = end === -1 ? s : s.slice(0,end);
+      out += '<span style="color:#4b5563">'+escapeHtml(text)+'</span>';
+      s = end === -1 ? "" : s.slice(end);
+      continue;
+    }
+    const strM = /^("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)/.exec(s);
+    if(strM){ out += '<span style="color:#86efac">'+escapeHtml(strM[1])+'</span>'; s = s.slice(strM[1].length); continue; }
+    const numM = /^(\b\d+\.?\d*\b)/.exec(s);
+    if(numM){ out += '<span style="color:#fca5a5">'+numM[1]+'</span>'; s = s.slice(numM[1].length); continue; }
+    const idM = /^([a-zA-Z_$][a-zA-Z0-9_$]*)/.exec(s);
+    if(idM){
+      const w = idM[1];
+      const after = s.slice(w.length).trimStart();
+      const color = KW.has(w) ? "#D4F000" : after.startsWith("(") ? "#93c5fd" : "#f1f5f9";
+      out += '<span style="color:'+color+'">'+escapeHtml(w)+'</span>';
+      s = s.slice(w.length);
+      continue;
+    }
+    out += '<span style="color:#94a3b8">'+escapeHtml(s[0])+'</span>';
+    s = s.slice(1);
+  }
+  return out;
+}
+document.querySelectorAll("code[data-lang]").forEach(el => { el.innerHTML = highlight(el.textContent); });
+
+document.querySelectorAll(".tabbtn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tabbtn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tabpane").forEach(p => p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+  });
+});
+
+const revealIO = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add("visible"); revealIO.unobserve(e.target); } });
+},{threshold:.1});
+document.querySelectorAll(".reveal").forEach(el => revealIO.observe(el));
+
+const spyLinks = document.querySelectorAll("[data-spy]");
+const spyIO = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if(e.isIntersecting){
+      spyLinks.forEach(l => l.classList.toggle("active", l.dataset.spy === e.target.id));
+    }
+  });
+},{rootMargin:"-15% 0% -75% 0%",threshold:0});
+document.querySelectorAll(".doc-section").forEach(el => spyIO.observe(el));
+
+function route(){
+  const onDocs = location.hash.startsWith("#/docs");
+  document.getElementById("page-home").classList.toggle("active", !onDocs);
+  document.getElementById("page-docs").classList.toggle("active", onDocs);
+  if(onDocs) window.scrollTo(0,0);
+}
+window.addEventListener("hashchange", route);
+route();
+</script>
+</body>
+</html>
