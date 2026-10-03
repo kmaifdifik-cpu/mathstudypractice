@@ -673,6 +673,13 @@
 #view-music:not(.active){display:none !important}
 #view-music.active{display:grid}
 #view-movies.active{display:block}
+#view-browser.active{display:block}
+#view-browser{height:100vh;box-sizing:border-box;padding-bottom:112px;display:none}
+#view-browser .browser-bar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:rgba(16,16,20,0.85);border-bottom:1px solid var(--border)}
+#view-browser .browser-bar span{flex:1;color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#view-browser .browser-bar button{background:transparent;border:1px solid var(--border);border-radius:999px;color:var(--text);padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+#view-browser .browser-bar button:hover{border-color:var(--accent);color:var(--accent)}
+#view-browser #browserFrame{width:100%;height:100%;border:none;background:#000;display:block}
 #view-music{height:100vh;padding-bottom:104px;box-sizing:border-box}
 .dock a{cursor:pointer}
 .dock a.active{background:var(--accent);color:#0B0B0F}
@@ -680,6 +687,7 @@
 .coming-soon h1{font-size:clamp(40px,8vw,64px);font-weight:700;margin:0}
 #view-games{min-height:100vh;padding-bottom:120px;box-sizing:border-box}
 </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -1047,6 +1055,15 @@ button {
 <div class="coming-soon"><h1>Coming soon</h1></div>
 </section>
 
+<section class="page-view" id="view-browser">
+<div class="browser-bar">
+  <span>Web Browser — powered by proxy.html</span>
+  <button onclick="document.getElementById('browserFrame').src='proxy.html'">&#8635; Reload</button>
+  <button onclick="window.open('proxy.html','_blank')">Open in new tab</button>
+</div>
+<iframe id="browserFrame" src="proxy.html"></iframe>
+</section>
+
 <div class="dock">
   <a data-page="home" aria-label="Home" class="active">
     <svg viewBox="0 0 24 24"><path d="M12,3,3,10.5V21a1,1,0,0,0,1,1H9a1,1,0,0,0,1-1V15h4v6a1,1,0,0,0,1,1h5a1,1,0,0,0,1-1V10.5Z"/></svg>
@@ -1072,8 +1089,8 @@ button {
   <a data-page="movies" aria-label="Movies">
     <svg viewBox="0 0 24 24"><path d="M4,5H20a1,1,0,0,1,1,1V18a1,1,0,0,1-1,1H4a1,1,0,0,1-1-1V6A1,1,0,0,1,4,5Zm5,3v8l7-4Z"/></svg>
   </a>
-  <a href="chatgpt.html" aria-label="ChatGPT">
-    <svg viewBox="0 0 24 24"><path d="M12,2C12.5,7 13,9.5 14,10.5C15,11.5 17.5,12 22,12C17.5,12 15,12.5 14,13.5C13,14.5 12.5,17 12,22C11.5,17 11,14.5 10,13.5C9,12.5 6.5,12 2,12C6.5,12 9,11.5 10,10.5C11,9.5 11.5,7 12,2Z"/></svg>
+  <a data-page="browser" aria-label="Browser">
+    <svg viewBox="0 0 24 24"><path d="M12,2A10,10,0,1,0,22,12,10,10,0,0,0,12,2Zm7,9h-3a15.6,15.6,0,0,0-1.2-5.5A8,8,0,0,1,19,11ZM12,4a14,14,0,0,1,1.9,7H10.1A14,14,0,0,1,12,4ZM5,11a8,8,0,0,1,3.2-5.5A15.6,15.6,0,0,0,7,11Zm0,2H7a15.6,15.6,0,0,0,1.2,5.5A8,8,0,0,1,5,13Zm7,7a14,14,0,0,1-1.9-7h3.8A14,14,0,0,1,12,20Zm4.8-1.5A15.6,15.6,0,0,0,17,13h2A8,8,0,0,1,16.8,18.5Z"/></svg>
   </a>
 </div>
 
@@ -1379,8 +1396,17 @@ try{
   let myName = null;
   let myId = null;
   let db = null;
-  let ready = false;
-  let pendingQueue = [];
+  let pendingText = null;
+
+  // Local message store — keeps chat working (and persistent) even without live sync.
+  function loadLocal() {
+    try { return JSON.parse(localStorage.getItem('cs_chat_local')) || []; }
+    catch (e) { return []; }
+  }
+  function saveLocal(list) {
+    try { localStorage.setItem('cs_chat_local', JSON.stringify(list)); } catch (e) {}
+  }
+  let localMsgs = loadLocal();
 
   try {
     myId = localStorage.getItem('cs_chat_id');
@@ -1431,41 +1457,49 @@ try{
 
   function setStatus(s) { statusEl.textContent = s; }
 
+  // Merge locally-saved messages into the synced list (deduped by id, sorted by time).
+  function mergeLocalInto(list) {
+    const ids = {};
+    (list || []).forEach(m => { ids[m.id] = true; });
+    const extra = localMsgs.filter(m => !ids[m.id]);
+    return [...(list || []), ...extra].sort((a, b) => (a.ts || 0) - (b.ts || 0)).slice(-MAX_MESSAGES);
+  }
+
   async function init() {
+    render(localMsgs);
     if (!window.claude || typeof window.claude.use !== 'function') {
-      setStatus('Live sync unavailable in this preview. Messages will stay on this device only.');
-      db = null;
-      ready = true;
+      setStatus('Live sync unavailable here — messages are saved on this device only.');
       return;
     }
-    try {
-      db = await window.claude.use('db');
-    } catch (e) {
-      db = null;
-    }
+    try { db = await window.claude.use('db'); } catch (e) { db = null; }
     if (!db) {
-      setStatus('Live sync unavailable here. Messages will stay on this device only.');
-      ready = true;
+      setStatus('Live sync unavailable here — messages are saved on this device only.');
+      render(localMsgs);
       return;
     }
     setStatus('Connected — messages sync live.');
     const ref = db.doc('chat/messages');
     ref.onSnapshot(
-      (snap) => {
+      snap => {
         const data = snap.data && snap.data();
-        const messages = (data && data.list) || [];
-        render(messages);
+        render(mergeLocalInto((data && data.list) || []));
       },
-      (err) => {
-        setStatus('Sync error: ' + (err && err.code ? err.code : 'unavailable'));
-      }
+      err => setStatus('Sync error: ' + (err && err.code ? err.code : 'unavailable'))
     );
-    ready = true;
   }
 
   async function sendMessage(text) {
-    text = text.trim();
+    text = (text || '').trim();
     if (!text) return;
+
+    // Must join (pick a name) before sending — reopen the modal instead of posting anonymously.
+    if (!myName) {
+      pendingText = text;
+      nameModal.classList.remove('hidden');
+      setTimeout(() => nameInput.focus(), 50);
+      return;
+    }
+
     const entry = {
       id: myId + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
       uid: myId,
@@ -1474,10 +1508,13 @@ try{
       ts: Date.now()
     };
 
+    // Always save locally first so the message is never lost.
+    localMsgs.push(entry);
+    while (localMsgs.length > MAX_MESSAGES) localMsgs.shift();
+    saveLocal(localMsgs);
+
     if (!db) {
-      // Local-only fallback: just render it in-session.
-      const existing = Array.from(mainEl.querySelectorAll('.msg')).length;
-      render([...(window.__localMsgs = window.__localMsgs || []), entry]);
+      render(localMsgs);
       return;
     }
 
@@ -1490,8 +1527,12 @@ try{
       list.push(entry);
       while (list.length > MAX_MESSAGES) list.shift();
       await ref.set({ list: list });
+      // Synced successfully — drop the local-only copy.
+      localMsgs = localMsgs.filter(m => m.id !== entry.id);
+      saveLocal(localMsgs);
     } catch (e) {
-      setStatus('Could not send — please try again.');
+      setStatus('Could not sync — message saved on this device.');
+      render(mergeLocalInto(localMsgs));
     } finally {
       sendBtn.disabled = false;
     }
@@ -1524,6 +1565,7 @@ try{
     document.getElementById('switchName').addEventListener('click', () => {
       nameInput.value = myName;
       nameModal.classList.remove('hidden');
+      setTimeout(() => nameInput.focus(), 50);
     });
   }
 
@@ -1534,6 +1576,11 @@ try{
     try { localStorage.setItem('cs_chat_name', myName); } catch (e) {}
     nameModal.classList.add('hidden');
     showWhoami();
+    if (pendingText) {
+      const t = pendingText;
+      pendingText = null;
+      sendMessage(t);
+    }
   }
 
   nameJoin.addEventListener('click', () => joinWithName(nameInput.value));
