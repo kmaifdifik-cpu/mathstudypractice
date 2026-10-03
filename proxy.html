@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ClassroomSpot</title>
+
+<script src="/uv/uv.bundle.js"></script>
+<script src="/uv/uv.config.js"></script>
+<script src="/baremux/index.js"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@400;500;600;700&family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Rajdhani', sans-serif;
+}
+
+body {
+    background: #000;
+}
+
+/* Snow */
+.snow-container {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.particle {
+    position: absolute;
+    background: #fff;
+    border-radius: 50%;
+    animation: fall linear infinite;
+    box-shadow: 0 0 6px rgba(255,255,255,0.9), 0 0 12px rgba(255,255,255,0.5);
+}
+
+@keyframes fall {
+    0%   { transform: translateY(-20px) translateX(0) rotate(0deg); opacity: 1; }
+    25%  { transform: translateY(25vh) translateX(15px) rotate(90deg); opacity: 0.9; }
+    50%  { transform: translateY(50vh) translateX(-10px) rotate(180deg); opacity: 0.8; }
+    75%  { transform: translateY(75vh) translateX(20px) rotate(270deg); opacity: 0.6; }
+    100% { transform: translateY(105vh) translateX(-5px) rotate(360deg); opacity: 0; }
+}
+
+/* Browser UI */
+.browser-ui {
+    height: 96px;
+    background: rgba(0,0,0,0.82);
+    backdrop-filter: blur(20px);
+    display: flex;
+    flex-direction: column;
+    border-bottom: 1px solid rgba(255,255,255,0.25);
+    z-index: 10;
+    position: relative;
+}
+
+.tabs {
+    height: 38px;
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    gap: 6px;
+    overflow-x: auto;
+}
+
+.tab {
+    height: 28px;
+    min-width: 160px;
+    max-width: 220px;
+    padding: 0 12px;
+    border-radius: 8px 8px 0 0;
+    background: rgba(30,30,30,0.9);
+    color: #aaa;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: all 0.3s ease;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    text-shadow: 0 0 5px rgba(255,255,255,0.3);
+}
+
+.tab.active {
+    background: rgba(50,50,50,0.95);
+    color: #fff;
+    border-color: rgba(255,255,255,0.5);
+    box-shadow: 0 0 15px rgba(255,255,255,0.2), inset 0 0 10px rgba(255,255,255,0.05);
+    text-shadow: 0 0 10px rgba(255,255,255,0.8);
+}
+
+.tab span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tab i { opacity: 0.6; transition: all 0.2s; }
+.tab i:hover { opacity: 1; color: #ff4444; text-shadow: 0 0 10px #ff4444; }
+
+.newtab {
+    width: 32px; height: 32px;
+    border-radius: 6px; border: none;
+    background: transparent; color: #fff;
+    cursor: pointer; transition: all 0.3s;
+}
+.newtab:hover { background: rgba(255,255,255,0.15); }
+
+.navbar {
+    height: 58px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 12px;
+}
+
+.navbar button {
+    width: 34px; height: 34px;
+    border-radius: 50%; border: none;
+    background: transparent; color: #fff;
+    cursor: pointer; transition: all 0.3s;
+}
+.navbar button:hover {
+    background: rgba(255,255,255,0.15);
+    box-shadow: 0 0 12px rgba(255,255,255,0.3);
+}
+
+.urlbar {
+    flex: 1; height: 36px;
+    background: rgba(10,10,10,0.85);
+    border-radius: 18px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    border: 1px solid rgba(255,255,255,0.25);
+    transition: all 0.3s;
+}
+.urlbar:focus-within {
+    border-color: rgba(255,255,255,0.55);
+    box-shadow: 0 0 18px rgba(255,255,255,0.2);
+}
+.urlbar input {
+    width: 100%; height: 100%;
+    background: transparent; border: none; outline: none;
+    color: #fff; font-size: 14px;
+    font-family: 'Rajdhani', sans-serif;
+}
+.urlbar input::placeholder { color: rgba(255,255,255,0.45); }
+
+.search-engine-select {
+    background: transparent; border: none;
+    color: #fff; font-family: 'Rajdhani', sans-serif;
+    font-size: 13px; cursor: pointer; outline: none;
+    padding-right: 6px;
+}
+.search-engine-select option { background: #111; color: #fff; }
+
+/* Frames */
+.viewframe {
+    position: absolute;
+    top: 96px; left: 0;
+    width: 100%; height: calc(100% - 96px);
+    border: none; display: none; z-index: 5;
+}
+.viewframe.active { display: block; }
+
+/* NTP */
+.ntp {
+    position: absolute;
+    top: 96px; left: 0;
+    width: 100%; height: calc(100% - 96px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    background: transparent;
+}
+
+.ntp-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.ntp-text {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: clamp(2.5rem, 8vw, 5rem);
+    display: inline-flex;
+    gap: 2px;
+    opacity: 0;
+    animation: fadeIn 1.2s ease forwards;
+    justify-content: center;
+}
+
+.ntp-text span {
+    color: #fff;
+    text-shadow: 0 0 5px rgba(255,255,255,0.8), 0 0 10px rgba(255,255,255,0.6);
+    animation: glow 1.8s ease-in-out infinite alternate;
+}
+.ntp-text span:nth-child(even) { animation-delay: 0.9s; }
+
+.ntp-subtitle {
+    margin-top: 10px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: clamp(0.9rem, 2vw, 1.3rem);
+    color: white;
+    min-height: 1.5em;
+    opacity: 0;
+    text-shadow: 0 0 4px rgba(255,255,255,0.7);
+    animation: fadeIn 1.2s ease forwards;
+    animation-delay: 0.5s;
+}
+
+.ntp-search-wrap {
+    margin-top: 28px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    width: min(480px, 80vw);
+}
+
+.ntp-search-wrap form {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    border-bottom: 1px solid rgba(255,255,255,0.35);
+    padding-bottom: 4px;
+    transition: border-color 0.25s;
+}
+
+.ntp-search-wrap form:focus-within {
+    border-color: rgba(255,255,255,0.75);
+}
+
+.ntp-search-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #fff;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 0.08em;
+    padding: 4px 8px 4px 2px;
+}
+
+.ntp-search-input::placeholder {
+    color: rgba(255,255,255,0.35);
+    font-size: 0.95rem;
+    letter-spacing: 0.12em;
+}
+
+.ntp-search-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.45);
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 2px 4px;
+    transition: color 0.2s;
+}
+.ntp-search-btn:hover { color: rgba(255,255,255,0.9); }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes glow {
+    from { text-shadow: 0 0 4px rgba(255,255,255,0.5); }
+    to { text-shadow: 0 0 12px rgba(255,255,255,1); }
+}
+
+/* Loading */
+.loading-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+}
+.loading-overlay.active { display: flex; }
+.loading-overlay img { width: 200px; height: 200px; border-radius: 20px; box-shadow: 0 0 30px rgba(255,255,255,0.5); }
+.loading-text {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2rem; color: #fff; margin-top: 20px;
+    text-shadow: 0 0 10px rgba(255,255,255,0.8);
+    animation: blink 1s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+/* Debug console */
+.debug-console {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    width: 400px;
+    max-height: 200px;
+    background: rgba(0,0,0,0.9);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    padding: 10px;
+    font-family: monospace;
+    font-size: 11px;
+    color: #0f0;
+    overflow-y: auto;
+    z-index: 9999;
+    display: none;
+}
+.debug-console.active { display: block; }
+.debug-console .dbg-error { color: #ff4444; }
+.debug-console .dbg-warn { color: #ffaa00; }
+.debug-console .dbg-info { color: #44aaff; }
+</style>
+<base target="_blank">
+<base target="_blank">
+</head>
+
+<body>
+
+<div class="snow-container" id="snow"></div>
+
+<div class="browser-ui">
+    <div class="tabs" id="tabs">
+        <button class="newtab" id="newtab"><i class="fas fa-plus"></i></button>
+    </div>
+
+    <div class="navbar">
+        <button id="back"><i class="fas fa-arrow-left"></i></button>
+        <button id="forward"><i class="fas fa-arrow-right"></i></button>
+        <button id="reload"><i class="fas fa-rotate-right"></i></button>
+
+        <form class="urlbar" id="form">
+            <select class="search-engine-select" id="searchEngine">
+                <option value="google">Google</option>
+                <option value="duckduckgo">DuckDuckGo</option>
+                <option value="brave">Brave</option>
+                <option value="bing">Bing</option>
+                <option value="yahoo">Yahoo</option>
+                <option value="ecosia">Ecosia</option>
+                <option value="startpage">Startpage</option>
+            </select>
+            <input id="url" placeholder="Search or enter address" autocomplete="off">
+        </form>
+
+        <button id="popout"><i class="fas fa-external-link"></i></button>
+    </div>
+</div>
+
+<!-- NTP -->
+<div class="ntp" id="ntp">
+    <div class="ntp-container">
+        <div class="ntp-text" id="ntpText">
+            <span>C</span><span>l</span><span>a</span><span>s</span><span>s</span><span>r</span><span>o</span><span>o</span><span>m</span>
+            <span>&nbsp;</span>
+            <span>S</span><span>p</span><span>o</span><span>t</span>
+        </div>
+        <div class="ntp-subtitle" id="q-box"></div>
+        <div class="ntp-search-wrap">
+            <form id="ntpForm">
+                <input class="ntp-search-input" id="ntpInput" placeholder="search the web..." autocomplete="off">
+                <button class="ntp-search-btn" type="submit"><i class="fas fa-arrow-right"></i></button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="loading-overlay" id="loader">
+    <img src="https://media1.tenor.com/m/fitGu2TwtHoAAAAd/cat-hyppy.gif" alt="Loading">
+    <div class="loading-text">LOADING...</div>
+</div>
+
+<!-- Debug Console -->
+<div class="debug-console" id="debugConsole"></div>
+
+<script>
+// ---- Debug Logger ----
+const dbg = document.getElementById('debugConsole');
+function log(msg, type='info') {
+    const line = document.createElement('div');
+    line.className = type === 'error' ? 'dbg-error' : type === 'warn' ? 'dbg-warn' : 'dbg-info';
+    line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    dbg.appendChild(line);
+    dbg.scrollTop = dbg.scrollHeight;
+    console.log(`[UV] ${msg}`);
+}
+// Show debug console with Shift+D
+document.addEventListener('keydown', e => {
+    if (e.shiftKey && e.key === 'D') dbg.classList.toggle('active');
+});
+
+// ---- Snow ----
+function createSnow() {
+    const container = document.getElementById('snow');
+    container.innerHTML = '';
+    for (let i = 0; i < 120; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.left = Math.random() * 100 + '%';
+        p.style.animationDuration = (Math.random() * 5 + 3) + 's';
+        p.style.animationDelay = Math.random() * 5 + 's';
+        p.style.opacity = Math.random() * 0.7 + 0.3;
+        const sz = Math.random() * 5 + 2;
+        p.style.width = sz + 'px';
+        p.style.height = sz + 'px';
+        container.appendChild(p);
+    }
+}
+createSnow();
+
+// ---- Unknown Hub typing ----
+const lines = [
+    "the best unblocked hub to exist", "why study when you can use unknown or delta ai?",
+    "jayden's website is so ass", "aurababy give me editor access c'mon",
+    "chupa mi pito", "doing ctrl + d while on this page is a good idea",
+    "done with your test yet? probably not lol", "hey bud this is not school appropriate (whatever)",
+    "imagine not using ai on your homework fucking loser", "what's up", "why am i still doing this",
+    "ronaldo can i get your shirt please", "'classroomspot' for short", "still in beta",
+    "what day is it again?", "what time is it again?", "this site is easy to skid, go ahead but please give me credit for whatever you take",
+    "did you know that i'm mexican", "FRIED CHICKEN FOREVER", "fuck barcelona", "hecho con sangre mexicano",
+    "canche quieres jugar 99 noches conmigo y (tal vez) ayfred", "i can't decide which is better: tacos or fried chicken",
+    "agua de jamaica tastes good but horchata mogs the absolute FUCK outta it", "i helped oscar make ONE site, now everyone wants to make their own unblocked game site (and it's so ass 90% of the time)",
+    "i make no money off of this site (and don't plan to), i do it for the love of the game dude",
+    "one click won't hurt", "might as well hop on games", "might as well stay a little longer",
+    "this is your fault lowkey", "we both know you're not leaving", "just act natural",
+    "nothing to see here", "if they ask, it's for research", "don't snitch on yourself (or on anybody in general)",
+    "this stays between you and me", "you opened this for a reason", "no turning back now",
+    "you'll close it after this one, right?", "be honest... you're not working", "this wasn't part of the plan, but fuck it",
+    "you said you'd focus today", "it started with one click", "you're pushing your luck",
+    "this feels illegal for no reason", "don't get caught lacking", "you hear footsteps?",
+    "alt tab ready at all times", "this page got you quiet", "low volume, high risk",
+    "close one dude", "just a quick visit", "famous last words", "this is getting out of hand",
+    "you still got time... i think", "no evidence left behind", "wipe your tracks",
+    "we move in silence", "stay low", "too late to rethink it", "commit to it now",
+    "this is where it all went wrong", "don't look behind you", "keep it subtle",
+    "you got this under control... right?", "this was a bad idea", "you're locked in now",
+    "don't fold", "hold it together", "almost got away with it", "this is risky business",
+    "you're playing a dangerous game", "just don't panic", "smooth exit when needed",
+    "why do i have people tryna copy me", "i just want someone to hug me",
+    "mami me encantas dime que tranza", "no espique inglish moderfoquer","hobby site - tinyurl.com/testingnstuff"
+];
+
+const box = document.getElementById('q-box');
+let pool = [...lines];
+
+function write(str, pos, done) {
+    if (pos <= str.length) {
+        box.innerHTML = str.slice(0, pos);
+        setTimeout(() => write(str, pos + 1, done), 55);
+    } else {
+        setTimeout(done, 1800);
+    }
+}
+
+function erase(str, pos, done) {
+    if (pos >= 0) {
+        box.innerHTML = str.slice(0, pos);
+        setTimeout(() => erase(str, pos - 1, done), 35);
+    } else {
+        setTimeout(done, 400);
+    }
+}
+
+function loop() {
+    if (pool.length == 0) pool = [...lines];
+    let rand = Math.floor(Math.random() * pool.length);
+    let pick = pool.splice(rand, 1)[0];
+    write(pick, 0, () => {
+        erase(pick, pick.length, loop);
+    });
+}
+setTimeout(loop, 900);
+
+// ============================================================
+// UV PROXY SETUP — FIXED WITH DEBUG LOGGING
+// ============================================================
+
+// 1. Check if UV config loaded
+if (typeof __uv$config === 'undefined') {
+    log('__uv$config is UNDEFINED! Make sure /uv/uv.config.js is loaded correctly.', 'error');
+} else {
+    log('__uv$config loaded. Prefix: ' + __uv$config.prefix);
+}
+
+// 2. Register Service Worker
+let swReady = false;
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/uv/sw.js', { scope: '/' })
+        .then(reg => {
+            log('Service Worker registered. Scope: ' + reg.scope);
+            swReady = true;
+        })
+        .catch(err => {
+            log('Service Worker FAILED: ' + err.message, 'error');
+            log('Make sure /uv/sw.js exists and is served with correct MIME type (application/javascript)', 'warn');
+        });
+} else {
+    log('Service Workers NOT SUPPORTED in this browser/context!', 'error');
+    log('You MUST serve this over HTTPS or localhost. file:// will NOT work.', 'error');
+}
+
+// 3. Setup BareMux
+let connection;
+try {
+    connection = new BareMux.BareMuxConnection('/baremux/worker.js');
+    log('BareMux connection created.');
+} catch (err) {
+    log('BareMux connection FAILED: ' + err.message, 'error');
+    log('Make sure /baremux/index.js and /baremux/worker.js exist.', 'error');
+}
+
+// Build Wisp URL (same host)
+const wispUrl = (location.protocol === 'https:' ? 'wss' : 'ws') + '://' + location.host + '/wisp/';
+log('Wisp URL: ' + wispUrl);
+
+// Try to set transport
+let transportReady = false;
+async function setupTransport() {
+    if (!connection) return;
+    try {
+        // Try Epoxy first (faster)
+        await connection.setTransport('/epoxy/index.mjs', [{ wisp: wispUrl }]);
+        log('Epoxy transport connected successfully!');
+        transportReady = true;
+    } catch (epoxyErr) {
+        log('Epoxy failed: ' + epoxyErr.message, 'warn');
+        try {
+            // Fallback to libcurl
+            await connection.setTransport('/libcurl/index.mjs', [{ websocket: 'wss://wisp.rhw.one/' }]);
+            log('libcurl transport connected (fallback)!');
+            transportReady = true;
+        } catch (curlErr) {
+            log('libcurl fallback ALSO failed: ' + curlErr.message, 'error');
+            log('Make sure /epoxy/index.mjs or /libcurl/index.mjs exist on your server.', 'error');
+            log('Also verify your Wisp server is running at ' + wispUrl, 'error');
+        }
+    }
+}
+setupTransport();
+
+// ============================================================
+// BROWSER LOGIC
+// ============================================================
+const tabsEl = document.getElementById('tabs');
+const newTabBtn = document.getElementById('newtab');
+const urlInput = document.getElementById('url');
+const ntp = document.getElementById('ntp');
+const loader = document.getElementById('loader');
+const searchEngineSelect = document.getElementById('searchEngine');
+
+let tabs = [], activeId = null, idCounter = 0;
+
+const searchEngines = {
+    google: 'https://www.google.com/search?q=',
+    duckduckgo: 'https://duckduckgo.com/?q=',
+    brave: 'https://search.brave.com/search?q=',
+    bing: 'https://www.bing.com/search?q=',
+    yahoo: 'https://search.yahoo.com/search?p=',
+    ecosia: 'https://www.ecosia.org/search?q=',
+    startpage: 'https://www.startpage.com/sp/search?query='
+};
+
+function showLoader() { loader.classList.add('active'); }
+function hideLoader() { loader.classList.remove('active'); }
+
+function createTab(url = '') {
+    const id = idCounter++;
+    const iframe = document.createElement('iframe');
+    iframe.className = 'viewframe';
+    iframe.dataset.id = id;
+    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-modals allow-popups');
+    iframe.setAttribute('loading', 'eager');
+    iframe.setAttribute('importance', 'high');
+    document.body.appendChild(iframe);
+
+    const tabBtn = document.createElement('div');
+    tabBtn.className = 'tab';
+    tabBtn.dataset.id = id;
+    tabBtn.innerHTML = '<span>New Tab</span><i class="fas fa-xmark"></i>';
+    tabBtn.addEventListener('click', e => {
+        if (e.target.tagName === 'I') closeTab(id);
+        else activateTab(id);
+    });
+    tabsEl.insertBefore(tabBtn, newTabBtn);
+    tabs.push({ id, iframe, tabBtn, history: [], index: -1 });
+    activateTab(id);
+    if (url) navigate(url);
+}
+
+function activateTab(id) {
+    activeId = id;
+    tabs.forEach(t => {
+        t.iframe.classList.toggle('active', t.id === id);
+        t.tabBtn.classList.toggle('active', t.id === id);
+    });
+    const tab = getTab();
+    if (!tab) return;
+    if (tab.index >= 0) {
+        urlInput.value = tab.history[tab.index];
+        ntp.style.display = 'none';
+    } else {
+        urlInput.value = '';
+        ntp.style.display = 'flex';
+    }
+}
+
+function closeTab(id) {
+    if (tabs.length === 1) return;
+    const i = tabs.findIndex(t => t.id === id);
+    const tab = tabs[i];
+    tab.iframe.remove();
+    tab.tabBtn.remove();
+    tabs.splice(i, 1);
+    activateTab(tabs[Math.max(0, i - 1)].id);
+}
+
+function normalize(input) {
+    if (!input.includes('.')) return searchEngines[searchEngineSelect.value] + encodeURIComponent(input);
+    if (!input.startsWith('http')) return 'https://' + input;
+    return input;
+}
+
+async function navigate(input, push = true) {
+    const tab = getTab();
+    if (!tab) return;
+
+    // Check prerequisites
+    if (typeof __uv$config === 'undefined') {
+        log('Cannot navigate: __uv$config is missing!', 'error');
+        alert('UV config not loaded! Check that /uv/uv.config.js exists.');
+        return;
+    }
+    if (!transportReady) {
+        log('Cannot navigate: BareMux transport not ready yet.', 'warn');
+        // Try to setup transport again
+        await setupTransport();
+        if (!transportReady) {
+            alert('Proxy transport not connected. Check debug console (Shift+D) for details.');
+            return;
+        }
+    }
+
+    const url = normalize(input);
+    if (push) {
+        tab.history = tab.history.slice(0, tab.index + 1);
+        tab.history.push(url);
+        tab.index++;
+    }
+    showLoader();
+    log('Navigating to: ' + url);
+
+    const proxyUrl = __uv$config.prefix + __uv$config.encodeUrl(url);
+    log('Proxy URL: ' + proxyUrl);
+
+    tab.iframe.src = proxyUrl;
+    urlInput.value = url;
+    ntp.style.display = 'none';
+
+    tab.iframe.onload = () => {
+        hideLoader();
+        try {
+            const title = tab.iframe.contentDocument?.title;
+            if (title) {
+                tab.tabBtn.querySelector('span').textContent = title;
+            } else {
+                tab.tabBtn.querySelector('span').textContent = new URL(url).hostname;
+            }
+        } catch (e) {
+            tab.tabBtn.querySelector('span').textContent = new URL(url).hostname;
+        }
+    };
+
+    tab.iframe.onerror = (e) => {
+        hideLoader();
+        log('Iframe failed to load: ' + url, 'error');
+    };
+
+    setTimeout(() => {
+        if (loader.classList.contains('active')) {
+            hideLoader();
+            log('Load timeout reached for: ' + url, 'warn');
+        }
+    }, 5000);
+}
+
+function getTab() { return tabs.find(t => t.id === activeId); }
+
+back.onclick = () => { const t = getTab(); if (!t || t.index <= 0) return; t.index--; navigate(t.history[t.index], false); };
+forward.onclick = () => { const t = getTab(); if (!t || t.index >= t.history.length - 1) return; t.index++; navigate(t.history[t.index], false); };
+reload.onclick = () => { const t = getTab(); if (!t) return; t.iframe.src = t.iframe.src; };
+popout.onclick = () => { const t = getTab(); if (!t) return; window.open(t.iframe.src, '_blank'); };
+form.onsubmit = e => { e.preventDefault(); if (urlInput.value.trim()) navigate(urlInput.value); };
+newTabBtn.onclick = () => createTab();
+
+document.getElementById('ntpForm').onsubmit = e => {
+    e.preventDefault();
+    const q = document.getElementById('ntpInput').value.trim();
+    if (!q) return;
+    navigate('https://duckduckgo.com/?q=' + encodeURIComponent(q));
+    document.getElementById('ntpInput').value = '';
+};
+
+createTab();
+log('Unknown Hub initialized. Press Shift+D to open debug console.');
+</script>
+</body>
+</html>
