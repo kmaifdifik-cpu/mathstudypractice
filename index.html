@@ -448,12 +448,11 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 <div class="chat-header"><h2>Chat</h2><p>Global chat, friends, DMs and calls</p></div>
 <div id="chatAuth">
 <h2 id="chatAuthTitle">Log in</h2>
-<input type="text" id="authName" placeholder="Username (new accounts only)" autocomplete="off">
-<input type="email" id="authEmail" placeholder="Email" autocomplete="off">
+<input type="text" id="authName" placeholder="Username" autocomplete="off">
 <input type="password" id="authPass" placeholder="Password">
 <div class="chat-auth-btns"><button id="authLogin">Log in</button><button id="authReg" class="ghost">Create account</button></div>
 <p id="authMsg"></p>
-<p id="authWhoRow">Logged in as <b id="authWho"></b> · <a href="#" id="authOut" style="color:var(--accent)">log out</a></p>
+<p id="authWhoRow">Logged in as <b id="authWho"></b> · <a href="#" id="authOut" style="color:var(--accent)">log out</a><br><span style="color:var(--muted);font-size:12px">Your ID: <code id="myUid" style="user-select:all"></code> <a href="#" id="copyUid" style="color:var(--accent)">copy</a> <span id="ownerBadge" style="display:none;color:var(--accent);font-weight:700">· 👑 OWNER</span></span></p>
 </div>
 <div id="chatMain" style="display:none">
 <div class="chat-tabs">
@@ -1071,6 +1070,24 @@ add('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js')
 }
 function chatMsg(m){fbAuth.onAuthStateChanged(u=>{const a=document.getElementById('authMsg');if(a){a.textContent=m;a.style.color='#f87171';}});}
 function fbClean(){fbUnsubs.forEach(u=>{try{u();}catch(e){}});fbUnsubs=[];}
+let ownerUids=[];
+async function refreshOwners(){
+try{
+const d=await fbDb.doc('roles/owners').get();
+ownerUids=(d.exists&&(d.data().uids||[]))||[];
+}catch(e){ownerUids=[];}
+const mine=fbUser&&ownerUids.includes(fbUser.uid);
+document.getElementById('ownerBadge').style.display=mine?'':'none';
+return mine;
+}
+async function claimOwner(){
+try{
+const ref=fbDb.doc('roles/owners');
+const d=await ref.get();
+if(!d.exists)await ref.set({uids:[fbUser.uid]});
+}catch(e){}
+await refreshOwners();
+}
 function escChat(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function validName(n){return /^[a-zA-Z0-9_]{3,16}$/.test(n);}
 async function chatBoot(){
@@ -1082,7 +1099,6 @@ fbUser=u;
 const authed=!!u;
 document.getElementById('chatAuthTitle').style.display=authed?'none':'';
 document.getElementById('authName').style.display=authed?'none':'';
-document.getElementById('authEmail').style.display=authed?'none':'';
 document.getElementById('authPass').style.display=authed?'none':'';
 document.getElementById('authLogin').style.display=authed?'none':'';
 document.getElementById('authReg').style.display=authed?'none':'';
@@ -1091,36 +1107,40 @@ document.getElementById('chatMain').style.display=authed?'':'none';
 if(!u){fbName='';return;}
 try{
 const doc=await fbDb.collection('users').doc(u.uid).get();
-fbName=(doc.exists&&doc.data().name)||u.email.split('@')[0];
+fbName=(doc.exists&&doc.data().name)||'anon';
 document.getElementById('authWho').textContent=fbName;
+document.getElementById('myUid').textContent=u.uid;
+await claimOwner();
 subGlobal();subFriends();subRequests();subIncoming();
 }catch(e){if(msg)msg.textContent='Profile error: '+e.message;}
 });
 }
+function fakeEmail(name){return name.toLowerCase()+'@mathstudypractice.local';}
 document.getElementById('authReg').addEventListener('click',async()=>{
 const name=document.getElementById('authName').value.trim();
-const email=document.getElementById('authEmail').value.trim();
 const pass=document.getElementById('authPass').value;
 const msg=document.getElementById('authMsg');
 if(!validName(name)){msg.textContent='Username: 3-16 letters, numbers or _';return;}
-if(!email||pass.length<6){msg.textContent='Email + password (6+ chars) required.';return;}
+if(pass.length<6){msg.textContent='Password (6+ chars) required.';return;}
 try{
 await loadFirebase();
 const key='usernames/'+name.toLowerCase();
 const taken=await fbDb.doc(key).get();
 if(taken.exists){msg.textContent='Username is taken.';return;}
-const cred=await fbAuth.createUserWithEmailAndPassword(email,pass);
+const cred=await fbAuth.createUserWithEmailAndPassword(fakeEmail(name),pass);
 await fbDb.doc(key).set({uid:cred.user.uid});
 await fbDb.collection('users').doc(cred.user.uid).set({name:name,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
 msg.textContent='';
 }catch(e){msg.textContent=e.message;}
 });
 document.getElementById('authLogin').addEventListener('click',async()=>{
-const email=document.getElementById('authEmail').value.trim();
+const name=document.getElementById('authName').value.trim();
 const pass=document.getElementById('authPass').value;
 const msg=document.getElementById('authMsg');
-try{await loadFirebase();await fbAuth.signInWithEmailAndPassword(email,pass);msg.textContent='';}catch(e){msg.textContent=e.message;}
+if(!name||!pass){msg.textContent='Enter your username and password.';return;}
+try{await loadFirebase();await fbAuth.signInWithEmailAndPassword(fakeEmail(name),pass);msg.textContent='';}catch(e){msg.textContent='Wrong username or password.';}
 });
+document.getElementById('copyUid').addEventListener('click',e=>{e.preventDefault();const t=document.getElementById('myUid').textContent;try{navigator.clipboard.writeText(t);}catch(err){}});
 document.getElementById('authOut').addEventListener('click',e=>{e.preventDefault();if(fbAuth)fbAuth.signOut();});
 // Global chat
 function subGlobal(){
@@ -1128,10 +1148,12 @@ const box=document.getElementById('globalMsgs');
 box.innerHTML='<p style="color:var(--muted)">Loading...</p>';
 const un=fbDb.collection('global').orderBy('ts','desc').limit(50).onSnapshot(snap=>{
 const items=[];
-snap.forEach(d=>items.push(d.data()));
+snap.forEach(d=>items.push({id:d.id,...d.data()}));
 items.reverse();
-box.innerHTML=items.map(m=>'<div class="msg'+(m.uid===(fbUser&&fbUser.uid)?' me':'')+'"><div class="mn">'+escChat(m.name)+'</div><div class="mb">'+escChat(m.text)+'</div></div>').join('')||'<p style="color:var(--muted)">Say hi! 👋</p>';
+const mine=fbUser&&ownerUids.includes(fbUser.uid);
+box.innerHTML=items.map(m=>'<div class="msg'+(m.uid===(fbUser&&fbUser.uid)?' me':'')+'"><div class="mn">'+(ownerUids.includes(m.uid)?'👑 ':'')+escChat(m.name)+'</div><div class="mb">'+escChat(m.text)+'</div>'+(mine?'<div><button data-del="'+m.id+'" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;margin-top:2px">delete</button></div>':'')+'</div>').join('')||'<p style="color:var(--muted)">Say hi! 👋</p>';
 box.scrollTop=box.scrollHeight;
+if(mine)box.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',async()=>{try{await fbDb.collection('global').doc(b.dataset.del).delete();}catch(e){}}));
 });
 fbUnsubs.push(un);
 }
