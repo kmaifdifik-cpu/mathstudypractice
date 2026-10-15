@@ -1,6 +1,10 @@
 self.__uv$config = {
     prefix: '/uv/service/',
-    bare: 'bare server link here',
+    bare: [
+        'https://bare.coolblue.me/',
+        'https://bare.9260300.xyz/',
+        'https://bare.cliste.cc/',
+    ],
     encodeUrl: Ultraviolet.codec.xor.encode,
     decodeUrl: Ultraviolet.codec.xor.decode,
     handler: '/uv/uv.handler.js',
