@@ -1230,6 +1230,7 @@ const sub=nPool.subscribeMany(NOSTR_RELAYS,[{kinds:[1],'#t':[NOSTR_TAG],limit:50
 onevent(ev){
 try{
 if(ev.kind!==1||!ev.content) return;
+if(globalCache.some(m=>m.id===ev.id))return;
 const t=(ev.tags||[]).find(t=>t[0]==='t'&&t[1]===NOSTR_TAG);
 if(!t)return;
 let nm='';
