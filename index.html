@@ -440,7 +440,9 @@ waveCtx.lineTo(x,y);
 }
 waveCtx.lineTo(w,h);waveCtx.closePath();waveCtx.fillStyle=colors[l];waveCtx.fill();
 }
-waveTime+=0.015;requestAnimationFrame(drawWave);
+waveTime+=0.015;
+}
+requestAnimationFrame(drawWave);
 }
 drawWave();
 // ── Stars ──────────────────────────────────────────────────────────────────
