@@ -593,6 +593,19 @@ function loadAds(){if(document.querySelector('script[data-ads-zone]'))return;var
 const rawOpen=window.open.bind(window);
 window.__siteOpen=function(u,t,r){return rawOpen(u,t||'_blank',r);};
 window.open=function(u,t,r){if(!adsOn)return null;return rawOpen(u,t,r);};
+// Layer 2: block programmatic .click() on new-tab links while ads are off.
+// Real user clicks are trusted events, never .click() calls, so they pass through.
+const rawAClick=HTMLAnchorElement.prototype.click;
+HTMLAnchorElement.prototype.click=function(){if(!adsOn){const t=(this.target||'').toLowerCase();if(t==='_blank'||t==='_new'||t==='')return;}return rawAClick.call(this);};
+// Layer 3: block synthetic (untrusted) clicks aimed at new tabs while ads are off.
+// Capture phase runs before the ad tag's own listeners, so it wins.
+function blockSynthClick(e){
+if(adsOn||e.isTrusted)return;
+const a=e.target&&e.target.closest?e.target.closest('a[target="_blank"],a[target="_new"]'):null;
+if(a){e.preventDefault();e.stopPropagation();}
+}
+window.addEventListener('click',blockSynthClick,true);
+window.addEventListener('auxclick',blockSynthClick,true);
 function armAds(){if(adsOn)loadAds();}
 window.addEventListener('pointerdown',function bootAds(){window.removeEventListener('pointerdown',bootAds);armAds();});
 window.addEventListener('keydown',function bootAdsK(){window.removeEventListener('keydown',bootAdsK);armAds();});
