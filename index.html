@@ -275,12 +275,13 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 <button class="cloak-btn" data-cloak="off"><i class="fas fa-eye-slash"></i><span>Off</span></button>
 </div>
 </div>
-<div><h3>Site mirrors (opens in new tab)</h3>
+<div><h3>CDN mirrors (opens in new tab)</h3>
 <div class="mirror-row" id="mirrorRow">
-<button class="mirror-btn" data-link="https://vercel.com/new/clone?repository-url=https://github.com/kmaifdifik-cpu/mathstudypractice">Deploy on Vercel</button>
-<button class="mirror-btn" data-link="https://app.netlify.com/start/deploy?repository=https://github.com/kmaifdifik-cpu/mathstudypractice">Deploy on Netlify</button>
-<button class="mirror-btn" data-link="https://dashboard.render.com/select-repo?type=static">Deploy on Render</button>
-<button class="mirror-btn" data-link="https://github.com/kmaifdifik-cpu/mathstudypractice/settings/pages">GitHub Pages setup</button>
+<button class="mirror-btn" data-link="https://quantil.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@main/index.html">quantil.jsdelivr.net</button>
+<button class="mirror-btn" data-link="https://cdn.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@main/index.html">cdn.jsdelivr.net</button>
+<button class="mirror-btn" data-link="https://fastly.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@main/index.html">fastly.jsdelivr.net</button>
+<button class="mirror-btn" data-link="https://gcore.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@main/index.html">gcore.jsdelivr.net</button>
+<button class="mirror-btn" data-link="https://testingcf.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@main/index.html">testingcf.jsdelivr.net</button>
 </div>
 </div>
 </div>
@@ -592,7 +593,7 @@ if(url.includes(h+'/gh'))return url.replace(h+'/gh',cdnMirror.replace('https://'
 return url;
 }catch(e){return url;}
 }
-document.querySelectorAll('.mirror-btn').forEach(b=>{
+document.querySelectorAll('#mirrorRow .mirror-btn').forEach(b=>{
 b.addEventListener('click',()=>{
 window.open(b.dataset.link,'_blank','noopener');
 });
@@ -636,7 +637,7 @@ frame.src='about:blank';
 document.getElementById('gn-player-title').textContent=name+' (link coming soon)';
 }
 function renderGames(list){const grid=document.getElementById('gn-grid');grid.innerHTML=list.map(renderGameCard).join('');document.getElementById('gn-count').textContent=list.length+' games';grid.querySelectorAll('.gn-card').forEach(card=>{card.addEventListener('click',()=>{openInPlayer(card.dataset.game,card.dataset.url,card.dataset.key);});});}
-function allGames(){const seen={};const out=[];for(const g of gnGames.concat(ugsGames,cloudGames)){const k=(g.name||'').toLowerCase().replace(/[^a-z0-9]/g,'');if(k&&!seen[k]){seen[k]=true;out.push(g);}}return out;}
+function allGames(){const seen={};const out=[];for(const g of gnGames.concat(ugsGames,cloudGames,luminGames)){const k=(g.name||'').toLowerCase().replace(/[^a-z0-9]/g,'');if(k&&!seen[k]){seen[k]=true;out.push(g);}}return out;}
 function loadCurrentServer(){
 const grid=document.getElementById('gn-grid');
 const luminPanel=document.getElementById('lumin-panel');
@@ -679,20 +680,61 @@ window.__luminRetry=()=>{luminState='idle';const g=document.getElementById('game
 function stripLuminPages(){
 const gamesEl=document.getElementById('games');
 if(!gamesEl)return;
-const cands=Array.from(gamesEl.querySelectorAll('button,a,span,li,div')).filter(el=>{
+function clean(root){
+let cands=[];
+try{
+cands=Array.from(root.querySelectorAll('button,a,span,li,div')).filter(el=>{
 if(el.querySelector('img'))return false;
 const t=(el.textContent||'').trim();
-return /^(prev|next)$/i.test(t)||/^\d{1,3}$/.test(t);
+return /^(prev|previous|next)$/i.test(t)||/^[«»<>‹›]+$/.test(t)||/^\d{1,3}$/.test(t);
 });
-// Only strip when they appear as a group (a real pagination bar)
+}catch(e){}
 if(cands.length>=3)cands.forEach(el=>{el.style.display='none';});
+try{root.querySelectorAll('*').forEach(el=>{if(el.shadowRoot)clean(el.shadowRoot);});}catch(e){}
+}
+try{clean(gamesEl);}catch(e){}
 }
 new MutationObserver(stripLuminPages).observe(document.getElementById('games'),{childList:true,subtree:true});
+// Scrape Lumin's rendered games so the All tab + counts include them
+let luminGames=[];
+function scrapeLumin(){
+const gamesEl=document.getElementById('games');
+if(!gamesEl)return;
+const found=[];const seen={};
+function walk(root){
+let links=[];
+try{links=Array.from(root.querySelectorAll('a'));}catch(e){}
+links.forEach(a=>{
+let href='';
+try{href=a.getAttribute('href')||'';}catch(e){}
+const img=a.querySelector('img');
+if(!img)return;
+let name='';
+try{name=((img.getAttribute('alt')||'')+' '+(a.textContent||'')).trim().split('\n')[0].trim();}catch(e){}
+if(!name||name.length>60)return;
+const key=name.toLowerCase().replace(/[^a-z0-9]/g,'');
+if(!key||seen[key])return;seen[key]=true;
+let src='';
+try{src=img.getAttribute('src')||img.dataset.src||'';}catch(e){}
+if(src&&src.indexOf('http')!==0&&src.indexOf('data:')!==0&&src.indexOf('blob:')!==0){try{src=new URL(src,location.href).href;}catch(e){src='';}}
+if(href&&href.indexOf('http')!==0&&href.charAt(0)!=='#'&&href.indexOf('javascript:')!==0){try{href=new URL(href,location.href).href;}catch(e){href='';}}
+found.push({name:name,img:src||FALLBACK_IMG,url:(href&&href.indexOf('http')===0)?href:''});
+});
+try{root.querySelectorAll('*').forEach(el=>{if(el.shadowRoot)walk(el.shadowRoot);});}catch(e){}
+}
+try{walk(gamesEl);}catch(e){}
+luminGames=found;
+if(currentServer==='lumin')document.getElementById('gn-count').textContent=found.length+' games';
+if(currentServer==='all')loadCurrentServer();
+}
 ensureScript(()=>{
 try{
 Lumin.init({container:'#games',theme:'dark'});
 document.getElementById('gn-count').textContent='lumin library loaded';
 luminState='ready';
+stripLuminPages();
+setTimeout(scrapeLumin,1500);
+setTimeout(scrapeLumin,4000);
 }catch(e){
 document.getElementById('gn-count').textContent='';
 gamesEl.innerHTML='<p style="color:#f87171;padding:40px;text-align:center">Lumin failed to start.<br><button onclick="window.__luminRetry()" style="margin-top:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-weight:700;cursor:pointer">Retry</button></p>';
@@ -707,6 +749,9 @@ if(gamesEl.children.length>0&&hasContent){
 clearInterval(iv);
 luminState='ready';
 document.getElementById('gn-count').textContent='lumin library loaded';
+stripLuminPages();
+setTimeout(scrapeLumin,1500);
+setTimeout(scrapeLumin,4000);
 }else if(tries>=20){
 clearInterval(iv);
 if(!hasContent&&gamesEl.children.length===0){
