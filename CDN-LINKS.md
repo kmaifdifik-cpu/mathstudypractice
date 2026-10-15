@@ -16,6 +16,13 @@ Every file in this repo served through 5 CDN mirrors. Replace @main with a commi
 - https://testingcf.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@main/bare-server.js
 - https://quantil.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@main/bare-server.js
 
+## CDN-LINKS.md
+- https://cdn.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@main/CDN-LINKS.md
+- https://fastly.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@main/CDN-LINKS.md
+- https://gcore.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@main/CDN-LINKS.md
+- https://testingcf.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@main/CDN-LINKS.md
+- https://quantil.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@main/CDN-LINKS.md
+
 ## classroomspot_v19.html
 - https://cdn.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@main/classroomspot_v19.html
 - https://fastly.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@main/classroomspot_v19.html
