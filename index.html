@@ -502,14 +502,39 @@ document.querySelectorAll('#themeRow .mirror-btn').forEach(b=>{
 b.addEventListener('click',()=>applyTheme(b.dataset.theme));
 });
 // ── Ads (Monetag, auto-resume) ───────────────────────────────────────────────
+// ── Ads (Monetag, session-only: fresh visit always starts ON) ──────────────────
 let adsOn=true;
-try{adsOn=localStorage.getItem('ads')!=='off';}catch(e){}
 let adsTimer=null;
 function loadAds(){if(document.querySelector('script[data-ads-zone]'))return;var s=document.createElement('script');s.src='https://quge5.com/88/tag.min.js';s.setAttribute('data-zone','295950');s.async=true;s.setAttribute('data-cfasync','false');s.setAttribute('data-ads-zone','1');document.body.appendChild(s);}
-function setAds(on){adsOn=on;try{localStorage.setItem('ads',on?'on':'off');}catch(e){}document.getElementById('adsToggle').classList.toggle('on',on);if(adsTimer)clearTimeout(adsTimer);if(on){loadAds();}else{adsTimer=setTimeout(()=>setAds(true),180000);}}
-document.getElementById('adsToggle').classList.toggle('on',adsOn);
-document.getElementById('adsToggle').addEventListener('click',()=>setAds(!adsOn));
-if(adsOn)loadAds();
+function adsRemaining(){try{const t=parseInt(sessionStorage.getItem('adsOffUntil')||'0',10);return Math.max(0,t-Date.now());}catch(e){return 0;}}
+function setAds(on){
+adsOn=on;
+document.getElementById('adsToggle').classList.toggle('on',on);
+if(adsTimer)clearTimeout(adsTimer);
+if(on){try{sessionStorage.removeItem('adsOffUntil');}catch(e){}loadAds();}
+else{
+try{sessionStorage.setItem('adsOffUntil',String(Date.now()+180000));}catch(e){}
+// Reload guarantees the ad tag never runs this session, so OFF is total
+location.reload();
+}
+}
+document.getElementById('adsToggle').addEventListener('click',()=>{
+if(adsOn){
+if(confirm('If you turn off ads it won\'t help us earn money for a VPS and links. Turn ads off for 3 minutes?'))setAds(false);
+}else{setAds(true);}
+});
+(function(){
+const left=adsRemaining();
+if(left>0){
+adsOn=false;
+document.getElementById('adsToggle').classList.remove('on');
+adsTimer=setTimeout(()=>setAds(true),left);
+}else{
+adsOn=true;
+document.getElementById('adsToggle').classList.add('on');
+loadAds();
+}
+})();
 // ── Download single file ─────────────────────────────────────────────────────
 document.getElementById('dlPage').addEventListener('click',async()=>{
 try{
