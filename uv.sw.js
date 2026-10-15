@@ -1,5 +1,24 @@
 importScripts('uv.bundle.js');
-importScripts('uv.config.js');
+
+// Inlined config (same shape as uv.config.js) so the worker never depends on
+// a stale cached copy of the config file for its prefix.
+(function(){
+var base=self.location.pathname.replace(/[^/]*$/,'');
+self.__uv$config = {
+    prefix: base+'uv/service/',
+    bare: [
+        'https://bare.coolblue.me/',
+        'https://bare.9260300.xyz/',
+        'https://bare.cliste.cc/',
+    ],
+    encodeUrl: Ultraviolet.codec.xor.encode,
+    decodeUrl: Ultraviolet.codec.xor.decode,
+    handler: base+'uv.handler.js',
+    bundle: base+'uv.bundle.js',
+    config: base+'uv.config.js',
+    sw: base+'uv.sw.js',
+};
+})();
 
 class UVServiceWorker extends EventEmitter {     
     constructor(config = __uv$config) {

@@ -642,7 +642,7 @@ if(!d||!t)return;
 d.className='uv-dot '+state;t.textContent=text;
 }
 if('serviceWorker' in navigator){
-navigator.serviceWorker.register('uv.sw.js',{scope:'./'}).then(function(){return navigator.serviceWorker.ready;}).then(function(){uvReady=true;uvStatus('on','proxy ready');}).catch(function(e){console.error('[uv]',e&&e.message);uvStatus('off','proxy unavailable');});
+navigator.serviceWorker.register('uv.sw.js',{scope:'./',updateViaCache:'none'}).then(function(){return navigator.serviceWorker.ready;}).then(function(){uvReady=true;uvStatus('on','proxy ready');}).catch(function(e){console.error('[uv]',e&&e.message);uvStatus('off','proxy unavailable');});
 setTimeout(function(){if(!uvReady)uvStatus('off','proxy unavailable');},12000);
 }else{uvStatus('off','proxy unavailable');}
 function proxiedUrl(url){
