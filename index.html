@@ -218,6 +218,52 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 .ctx-menu button{display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;background:none;border:none;color:var(--text);font-size:13px;cursor:pointer;border-radius:8px;text-align:left}
 .ctx-menu button:hover{background:rgba(255,255,255,.06)}
 .ctx-menu button i{width:16px;text-align:center;color:var(--muted)}
+/* Chat */
+#view-chat{padding:20px 24px;min-height:100vh}
+.chat-wrap{max-width:900px;margin:0 auto}
+.chat-header{text-align:center;margin-bottom:20px}
+.chat-header h2{font-size:28px;font-weight:800;margin-bottom:4px}
+.chat-header p{color:var(--muted);font-size:14px}
+#chatAuth{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:24px;max-width:420px;margin:0 auto}
+#chatAuth h2{font-size:20px;margin-bottom:4px}
+#chatAuth input{display:block;width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--text);font-size:14px;outline:none;margin-bottom:10px}
+#chatAuth input:focus{border-color:var(--accent)}
+.chat-auth-btns{display:flex;gap:10px}
+.chat-auth-btns button{flex:1;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:11px;font-weight:700;cursor:pointer}
+.chat-auth-btns button.ghost{background:transparent;border:1px solid var(--border)}
+#authMsg{font-size:12px;min-height:1.2em;margin-top:10px;color:var(--muted)}
+#authWhoRow{font-size:13px;margin-top:10px;display:none}
+.chat-tabs{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.chat-tab{background:rgba(16,16,20,.8);border:1px solid var(--border);color:var(--text);border-radius:999px;padding:9px 22px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.chat-tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.cpanel{display:none}
+.cpanel.active{display:block}
+.chat-box{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px}
+#globalMsgs,#dmMsgs{display:flex;flex-direction:column;gap:8px;max-height:46vh;overflow-y:auto;margin-bottom:12px}
+.msg{max-width:85%}
+.msg .mn{font-size:11px;color:var(--muted);margin-bottom:2px}
+.msg .mb{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:8px 12px;font-size:14px;line-height:1.4;word-wrap:break-word}
+.msg.me{align-self:flex-end;text-align:right}
+.msg.me .mb{background:var(--accent);border-color:var(--accent);color:#fff}
+.chat-send{display:flex;gap:10px}
+.chat-send input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:11px 14px;color:var(--text);font-size:14px;outline:none}
+.chat-send input:focus{border-color:var(--accent)}
+.chat-send button{background:var(--accent);color:#fff;border:none;border-radius:12px;padding:11px 20px;font-weight:700;cursor:pointer}
+.friend-row{display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:10px 14px;margin-bottom:8px}
+.friend-row .fn{flex:1;font-weight:600;font-size:14px}
+.friend-row button{background:transparent;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 10px;font-size:12px;cursor:pointer}
+.friend-row button:hover{border-color:var(--accent)}
+#reqBadge{display:none;background:#f87171;color:#fff;border-radius:999px;font-size:10px;padding:1px 7px;margin-left:6px}
+#callOverlay{position:fixed;inset:0;z-index:6000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.8)}
+#callOverlay[hidden]{display:none}
+.call-card{background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:24px;width:min(480px,92vw);text-align:center}
+.call-card h3{margin-bottom:12px}
+.call-card video{width:100%;border-radius:12px;background:#000;max-height:220px;margin-bottom:8px}
+.call-btns{display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+.call-btns button{border:none;border-radius:999px;padding:10px 22px;font-weight:700;cursor:pointer}
+#callAccept{background:#22c55e;color:#fff}
+#callDecline,#callEnd{background:#ef4444;color:#fff}
+#callMute{background:var(--border);color:var(--text)}
 </style>
 </head>
 <body>
@@ -236,6 +282,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 <button class="dock-btn" data-view="movies" title="Movies"><i class="fas fa-film"></i></button>
 <button class="dock-btn" data-view="music" title="Music"><i class="fas fa-music"></i></button>
 <button class="dock-btn" data-view="ai" title="ClassroomSpot AI"><i class="fas fa-robot"></i></button>
+<button class="dock-btn" data-view="chat" title="Chat"><i class="fas fa-comments"></i></button>
 <div class="dock-sep"></div>
 <button class="dock-btn" id="dockSettingsBtn" title="Settings"><i class="fas fa-cog"></i></button>
 <button class="dock-btn discord-btn" onclick="window.open('https://discord.com/invite/A4PhtpN5Q','_blank')" title="Discord">
@@ -273,6 +320,9 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 <button class="mirror-btn" data-fx="snow">Snow</button>
 <button class="mirror-btn" data-fx="off">Off</button>
 </div>
+</div>
+<div><h3>Firebase (for Chat + Calls)</h3>
+<div class="custom-row"><input type="text" id="fbConfig" placeholder='Paste Firebase web config JSON...' style="flex:1;background:rgba(124,58,237,.08);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:9px 12px;font-size:12px;outline:none"><button id="saveFb">Save</button></div>
 </div>
 <div><h3>Tab cloak</h3>
 <div class="cloak-row">
@@ -392,6 +442,46 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 </div>
 </div>
 </section>
+<!-- CHAT -->
+<section class="page-view" id="view-chat">
+<div class="chat-wrap">
+<div class="chat-header"><h2>Chat</h2><p>Global chat, friends, DMs and calls</p></div>
+<div id="chatAuth">
+<h2 id="chatAuthTitle">Log in</h2>
+<input type="text" id="authName" placeholder="Username (new accounts only)" autocomplete="off">
+<input type="email" id="authEmail" placeholder="Email" autocomplete="off">
+<input type="password" id="authPass" placeholder="Password">
+<div class="chat-auth-btns"><button id="authLogin">Log in</button><button id="authReg" class="ghost">Create account</button></div>
+<p id="authMsg"></p>
+<p id="authWhoRow">Logged in as <b id="authWho"></b> · <a href="#" id="authOut" style="color:var(--accent)">log out</a></p>
+</div>
+<div id="chatMain" style="display:none">
+<div class="chat-tabs">
+<button class="chat-tab active" data-cpanel="global">Global</button>
+<button class="chat-tab" data-cpanel="friends">Friends</button>
+<button class="chat-tab" data-cpanel="reqs">Requests<span id="reqBadge"></span></button>
+</div>
+<div class="cpanel active" id="cpanel-global">
+<div class="chat-box"><div id="globalMsgs"></div><div class="chat-send"><input id="globalInput" placeholder="Message everyone..." autocomplete="off"><button id="globalSend">Send</button></div></div>
+</div>
+<div class="cpanel" id="cpanel-friends">
+<div class="chat-box"><div id="friendList"></div><div class="chat-send"><input id="friendAdd" placeholder="Add friend by username..." autocomplete="off"><button id="friendAddBtn">Add</button></div></div>
+<div class="chat-box" id="dmArea" style="display:none"><h4 id="dmTitle" style="margin-bottom:10px"></h4><div id="dmMsgs"></div><div class="chat-send"><input id="dmInput" placeholder="Message..." autocomplete="off"><button id="dmSend">Send</button></div></div>
+</div>
+<div class="cpanel" id="cpanel-reqs">
+<div class="chat-box"><div id="reqList"></div></div>
+</div>
+</div>
+</div>
+</section>
+<div id="callOverlay" hidden>
+<div class="call-card">
+<h3 id="callTitle">Call</h3>
+<video id="callRemote" autoplay playsinline></video>
+<video id="callLocal" autoplay playsinline muted></video>
+<div class="call-btns"><button id="callAccept">Accept</button><button id="callDecline">Decline</button><button id="callEnd" style="display:none">End call</button><button id="callMute">Mute</button></div>
+</div>
+</div>
 <div class="ctx-menu" id="ctxMenu">
 <button onclick="window.open(window.location.href,'_blank')"><i class="fas fa-external-link"></i> Open in new tab</button>
 <button onclick="window.location.reload()"><i class="fas fa-rotate"></i> Reload</button>
@@ -560,6 +650,7 @@ views.forEach(v=>v.classList.toggle('active',v.id===viewId));
 if(btn.dataset.view==='games')loadCurrentServer();
 if(btn.dataset.view==='movies')loadMovieHome();
 if(btn.dataset.view==='music')bootMusic();
+if(btn.dataset.view==='chat')chatBoot();
 if(btn.dataset.view==='ai'&&!aiMsgs.children.length)aiAdd('ai','Hey! I\'m ClassroomSpot AI. Ask me anything — homework, explanations, whatever.');
 });
 });
@@ -962,7 +1053,309 @@ document.getElementById('mvServ').addEventListener('change',e=>mvUseProvider(par
 document.getElementById('mvNextSrv').addEventListener('click',()=>mvUseProvider(mvProvIdx+1));
 document.getElementById('mvEpGo').addEventListener('click',mvLoad);
 (function(){const sel=document.getElementById('mvServ');sel.innerHTML=MV_PROVIDERS.map((p,i)=>'<option value="'+i+'">'+p.name+'</option>').join('');sel.value=String(mvProvIdx);})();
-// ── ClassroomSpot AI (Groq) ────────────────────────────────────────────────
+// ── Chat (Firebase: auth + global + friends + DMs + calls) ───────────────────
+let fbApp=null,fbAuth=null,fbDb=null,fbUser=null,fbName='',fbUnsubs=[];
+function fbConfig(){try{return JSON.parse(localStorage.getItem('fb_config')||'null');}catch(e){return null;}}
+function loadFirebase(){
+if(fbApp)return Promise.resolve(true);
+const cfg=fbConfig();
+if(!cfg)return Promise.reject(new Error('Paste your Firebase web config in Settings first.'));
+return new Promise((res,rej)=>{
+function add(src){return new Promise((rs,rj)=>{const s=document.createElement('script');s.src=src;s.onload=rs;s.onerror=()=>rj(new Error('load '+src));document.head.appendChild(s);});}
+add('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js')
+.then(()=>add('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js'))
+.then(()=>add('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js'))
+.then(()=>{fbApp=firebase.initializeApp(cfg);fbAuth=firebase.auth();fbDb=firebase.firestore();res(true);})
+.catch(rej);
+});
+}
+function chatMsg(m){fbAuth.onAuthStateChanged(u=>{const a=document.getElementById('authMsg');if(a){a.textContent=m;a.style.color='#f87171';}});}
+function fbClean(){fbUnsubs.forEach(u=>{try{u();}catch(e){}});fbUnsubs=[];}
+function escChat(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function validName(n){return /^[a-zA-Z0-9_]{3,16}$/.test(n);}
+async function chatBoot(){
+const msg=document.getElementById('authMsg');
+try{await loadFirebase();}catch(e){if(msg)msg.textContent=e.message;return;}
+fbAuth.onAuthStateChanged(async u=>{
+fbClean();
+fbUser=u;
+const authed=!!u;
+document.getElementById('chatAuthTitle').style.display=authed?'none':'';
+document.getElementById('authName').style.display=authed?'none':'';
+document.getElementById('authEmail').style.display=authed?'none':'';
+document.getElementById('authPass').style.display=authed?'none':'';
+document.getElementById('authLogin').style.display=authed?'none':'';
+document.getElementById('authReg').style.display=authed?'none':'';
+document.getElementById('authWhoRow').style.display=authed?'':'none';
+document.getElementById('chatMain').style.display=authed?'':'none';
+if(!u){fbName='';return;}
+try{
+const doc=await fbDb.collection('users').doc(u.uid).get();
+fbName=(doc.exists&&doc.data().name)||u.email.split('@')[0];
+document.getElementById('authWho').textContent=fbName;
+subGlobal();subFriends();subRequests();subIncoming();
+}catch(e){if(msg)msg.textContent='Profile error: '+e.message;}
+});
+}
+document.getElementById('authReg').addEventListener('click',async()=>{
+const name=document.getElementById('authName').value.trim();
+const email=document.getElementById('authEmail').value.trim();
+const pass=document.getElementById('authPass').value;
+const msg=document.getElementById('authMsg');
+if(!validName(name)){msg.textContent='Username: 3-16 letters, numbers or _';return;}
+if(!email||pass.length<6){msg.textContent='Email + password (6+ chars) required.';return;}
+try{
+await loadFirebase();
+const key='usernames/'+name.toLowerCase();
+const taken=await fbDb.doc(key).get();
+if(taken.exists){msg.textContent='Username is taken.';return;}
+const cred=await fbAuth.createUserWithEmailAndPassword(email,pass);
+await fbDb.doc(key).set({uid:cred.user.uid});
+await fbDb.collection('users').doc(cred.user.uid).set({name:name,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+msg.textContent='';
+}catch(e){msg.textContent=e.message;}
+});
+document.getElementById('authLogin').addEventListener('click',async()=>{
+const email=document.getElementById('authEmail').value.trim();
+const pass=document.getElementById('authPass').value;
+const msg=document.getElementById('authMsg');
+try{await loadFirebase();await fbAuth.signInWithEmailAndPassword(email,pass);msg.textContent='';}catch(e){msg.textContent=e.message;}
+});
+document.getElementById('authOut').addEventListener('click',e=>{e.preventDefault();if(fbAuth)fbAuth.signOut();});
+// Global chat
+function subGlobal(){
+const box=document.getElementById('globalMsgs');
+box.innerHTML='<p style="color:var(--muted)">Loading...</p>';
+const un=fbDb.collection('global').orderBy('ts','desc').limit(50).onSnapshot(snap=>{
+const items=[];
+snap.forEach(d=>items.push(d.data()));
+items.reverse();
+box.innerHTML=items.map(m=>'<div class="msg'+(m.uid===(fbUser&&fbUser.uid)?' me':'')+'"><div class="mn">'+escChat(m.name)+'</div><div class="mb">'+escChat(m.text)+'</div></div>').join('')||'<p style="color:var(--muted)">Say hi! 👋</p>';
+box.scrollTop=box.scrollHeight;
+});
+fbUnsubs.push(un);
+}
+async function sendGlobal(){
+const inp=document.getElementById('globalInput');
+const text=inp.value.trim();
+if(!text||!fbUser)return;
+inp.value='';
+await fbDb.collection('global').add({uid:fbUser.uid,name:fbName,text:text.slice(0,500),ts:firebase.firestore.FieldValue.serverTimestamp()});
+}
+document.getElementById('globalSend').addEventListener('click',sendGlobal);
+document.getElementById('globalInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendGlobal();});
+// Friends
+function subFriends(){
+const box=document.getElementById('friendList');
+const un=fbDb.collection('users').doc(fbUser.uid).collection('friends').onSnapshot(snap=>{
+const list=[];
+snap.forEach(d=>list.push({uid:d.id,name:d.data().name}));
+box.innerHTML=list.map(f=>'<div class="friend-row"><span class="fn">'+escChat(f.name)+'</span><button data-dm="'+f.uid+'" data-nm="'+escChat(f.name)+'">Message</button><button data-call="'+f.uid+'" data-nm="'+escChat(f.name)+'">Call</button><button data-vid="'+f.uid+'" data-nm="'+escChat(f.name)+'">Video</button></div>').join('')||'<p style="color:var(--muted)">No friends yet — add someone by username below.</p>';
+box.querySelectorAll('[data-dm]').forEach(b=>b.addEventListener('click',()=>openDM(b.dataset.dm,b.dataset.nm)));
+box.querySelectorAll('[data-call]').forEach(b=>b.addEventListener('click',()=>startCall(b.dataset.call,b.dataset.nm,false)));
+box.querySelectorAll('[data-vid]').forEach(b=>b.addEventListener('click',()=>startCall(b.dataset.call,b.dataset.nm,true)));
+});
+fbUnsubs.push(un);
+}
+document.getElementById('friendAddBtn').addEventListener('click',async()=>{
+const name=document.getElementById('friendAdd').value.trim();
+if(!name||!fbUser)return;
+try{
+const doc=await fbDb.doc('usernames/'+name.toLowerCase()).get();
+if(!doc.exists){alert('No user named '+name);return;}
+const toUid=doc.data().uid;
+if(toUid===fbUser.uid){alert("That's you!");return;}
+const fr=await fbDb.collection('users').doc(fbUser.uid).collection('friends').doc(toUid).get();
+if(fr.exists){alert('Already friends.');return;}
+await fbDb.collection('requests').add({from:fbUser.uid,fromName:fbName,toUid:toUid,status:'pending',ts:firebase.firestore.FieldValue.serverTimestamp()});
+document.getElementById('friendAdd').value='';
+alert('Friend request sent to '+name);
+}catch(e){alert(e.message);}
+});
+// Requests
+function subRequests(){
+const box=document.getElementById('reqList');
+const badge=document.getElementById('reqBadge');
+const un=fbDb.collection('requests').where('toUid','==',fbUser.uid).where('status','==','pending').onSnapshot(snap=>{
+const list=[];
+snap.forEach(d=>list.push({id:d.id,...d.data()}));
+badge.style.display=list.length?'':'none';
+badge.textContent=list.length;
+box.innerHTML=list.map(r=>'<div class="friend-row"><span class="fn">'+escChat(r.fromName)+' wants to be friends</span><button data-acc="'+r.id+'" data-f="'+r.from+'" data-nm="'+escChat(r.fromName)+'">Accept</button><button data-dec="'+r.id+'">Decline</button></div>').join('')||'<p style="color:var(--muted)">No pending requests.</p>';
+box.querySelectorAll('[data-acc]').forEach(b=>b.addEventListener('click',async()=>{
+const batch=fbDb.batch();
+batch.set(fbDb.collection('users').doc(fbUser.uid).collection('friends').doc(b.dataset.f),{name:b.dataset.nm});
+batch.set(fbDb.collection('users').doc(b.dataset.f).collection('friends').doc(fbUser.uid),{name:fbName});
+batch.update(fbDb.collection('requests').doc(b.dataset.acc),{status:'accepted'});
+await batch.commit();
+}));
+box.querySelectorAll('[data-dec]').forEach(b=>b.addEventListener('click',async()=>{
+await fbDb.collection('requests').doc(b.dataset.dec).update({status:'declined'});
+}));
+});
+fbUnsubs.push(un);
+}
+// DMs
+let dmUid=null,dmUnsub=null,dmName='';
+function dmKey(a,b){return [a,b].sort().join('_');}
+function openDM(uid,name){
+dmUid=uid;dmName=name;
+document.getElementById('dmArea').style.display='';
+document.getElementById('dmTitle').textContent='Chat with '+name;
+const box=document.getElementById('dmMsgs');
+if(dmUnsub){try{dmUnsub();}catch(e){}}
+dmUnsub=fbDb.collection('dms').doc(dmKey(fbUser.uid,uid)).collection('messages').orderBy('ts','asc').limit(100).onSnapshot(snap=>{
+const items=[];
+snap.forEach(d=>items.push(d.data()));
+box.innerHTML=items.map(m=>'<div class="msg'+(m.uid===fbUser.uid?' me':'')+'"><div class="mn">'+escChat(m.name)+'</div><div class="mb">'+escChat(m.text)+'</div></div>').join('');
+box.scrollTop=box.scrollHeight;
+});
+}
+async function sendDM(){
+if(!dmUid||!fbUser)return;
+const inp=document.getElementById('dmInput');
+const text=inp.value.trim();
+if(!text)return;
+inp.value='';
+await fbDb.collection('dms').doc(dmKey(fbUser.uid,dmUid)).collection('messages').add({uid:fbUser.uid,name:fbName,text:text.slice(0,500),ts:firebase.firestore.FieldValue.serverTimestamp()});
+}
+document.getElementById('dmSend').addEventListener('click',sendDM);
+document.getElementById('dmInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendDM();});
+// Chat tabs
+document.querySelectorAll('.chat-tab').forEach(t=>{
+t.addEventListener('click',()=>{
+document.querySelectorAll('.chat-tab').forEach(x=>x.classList.remove('active'));
+document.querySelectorAll('.cpanel').forEach(p=>p.classList.remove('active'));
+t.classList.add('active');
+document.getElementById('cpanel-'+t.dataset.cpanel).classList.add('active');
+});
+});
+// ── Calls (WebRTC voice/video, Firestore signaling) ──────────────────────────
+const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}]};
+let pc=null,localStream=null,curCall=null,callUnsubs=[],muted=false;
+function callUI(mode,title,accept){
+document.getElementById('callTitle').textContent=title;
+document.getElementById('callOverlay').hidden=false;
+document.getElementById('callAccept').style.display=accept?'':'none';
+document.getElementById('callDecline').style.display=accept?'':'none';
+document.getElementById('callEnd').style.display=accept?'none':'';
+document.getElementById('callLocal').style.display=mode==='video'?'':'none';
+document.getElementById('callRemote').style.display=mode==='video'?'':'none';
+}
+function endCallUI(){
+try{if(pc)pc.close();}catch(e){}
+pc=null;curCall=null;
+try{if(localStream)localStream.getTracks().forEach(t=>t.stop());}catch(e){}
+localStream=null;
+callUnsubs.forEach(u=>{try{u();}catch(e){}});callUnsubs=[];
+document.getElementById('callOverlay').hidden=true;
+document.getElementById('callRemote').srcObject=null;
+document.getElementById('callLocal').srcObject=null;
+}
+async function media(video){
+localStream=await navigator.mediaDevices.getUserMedia({audio:true,video:video?{width:640}:false});
+document.getElementById('callLocal').srcObject=localStream;
+return localStream;
+}
+function newPC(callRef,isCaller){
+pc=new RTCPeerConnection(ICE);
+localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
+pc.ontrack=e=>{document.getElementById('callRemote').srcObject=e.streams[0];};
+pc.onicecandidate=e=>{
+if(e.candidate)callRef.update({[(isCaller?'callerCands':'calleeCands')]:firebase.firestore.FieldValue.arrayUnion(e.candidate.toJSON())}).catch(()=>{});
+};
+return pc;
+}
+function watchCands(callRef,field){
+let seen=0;
+const un=callRef.onSnapshot(d=>{
+const arr=(d.data()&&d.data()[field])||[];
+for(let i=seen;i<arr.length;i++){try{pc.addIceCandidate(new RTCIceCandidate(arr[i]));}catch(e){}}
+seen=arr.length;
+});
+callUnsubs.push(un);
+}
+async function startCall(toUid,toName,video){
+try{
+await loadFirebase();
+if(!fbUser){alert('Log in to chat first.');return;}
+await media(video);
+const callRef=fbDb.collection('calls').doc();
+curCall={id:callRef.id,video:video};
+newPC(callRef,true);
+const offer=await pc.createOffer();
+await pc.setLocalDescription(offer);
+await callRef.set({from:fbUser.uid,fromName:fbName,to:toUid,status:'ringing',video:video,offer:{type:offer.type,sdp:offer.sdp},callerCands:[],calleeCands:[],ts:firebase.firestore.FieldValue.serverTimestamp()});
+callUI(video?'video':'voice','Calling '+toName+'...',false);
+watchCands(callRef,'calleeCands');
+const un=callRef.onSnapshot(async d=>{
+const data=d.data();
+if(!data)return;
+if(data.answer&&!pc.remoteDescription){
+try{await pc.setRemoteDescription(new RTCSessionDescription(data.answer));}catch(e){}
+}
+if(data.status==='declined'){alert(toName+' declined.');await endCallUI();}
+if(data.status==='ended'){await endCallUI();}
+});
+callUnsubs.push(un);
+}catch(e){alert('Call failed: '+e.message);await endCallUI();}
+}
+function subIncoming(){
+const un=fbDb.collection('calls').where('to','==',fbUser.uid).where('status','==','ringing').onSnapshot(snap=>{
+snap.docChanges().forEach(async ch=>{
+if(ch.type!=='added')return;
+const id=ch.doc.id,data=ch.doc.data();
+if(curCall)return;
+curCall={id:id,video:!!data.video};
+callUI(data.video?'video':'voice','Incoming call from '+data.fromName,true);
+const callRef=fbDb.collection('calls').doc(id);
+document.getElementById('callAccept').onclick=async()=>{
+document.getElementById('callAccept').style.display='none';
+document.getElementById('callDecline').style.display='none';
+document.getElementById('callEnd').style.display='';
+try{
+await media(!!data.video);
+newPC(callRef,false);
+await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+const ans=await pc.createAnswer();
+await pc.setLocalDescription(ans);
+await callRef.update({status:'active',answer:{type:ans.type,sdp:ans.sdp}});
+watchCands(callRef,'callerCands');
+const un2=callRef.onSnapshot(async d2=>{
+if(d2.data()&&d2.data().status==='ended')await endCallUI();
+});
+callUnsubs.push(un2);
+}catch(e){alert('Could not answer: '+e.message);await endCallUI();}
+};
+document.getElementById('callDecline').onclick=async()=>{
+await callRef.update({status:'declined'});
+curCall=null;
+document.getElementById('callOverlay').hidden=true;
+};
+});
+});
+fbUnsubs.push(un);
+}
+document.getElementById('callEnd').addEventListener('click',async()=>{
+if(curCall){try{await fbDb.collection('calls').doc(curCall.id).update({status:'ended'});}catch(e){}}
+await endCallUI();
+});
+document.getElementById('callMute').addEventListener('click',e=>{
+muted=!muted;
+if(localStream)localStream.getAudioTracks().forEach(t=>{t.enabled=!muted;});
+e.target.textContent=muted?'Unmute':'Mute';
+});
+// Firebase config save
+document.getElementById('saveFb').addEventListener('click',()=>{
+const v=document.getElementById('fbConfig').value.trim();
+if(!v)return;
+try{
+const cfg=JSON.parse(v);
+if(!cfg.apiKey||!cfg.projectId){alert('That does not look like a Firebase web config (needs apiKey + projectId).');return;}
+localStorage.setItem('fb_config',JSON.stringify(cfg));
+alert('Saved! Open the Chat tab to log in.');
+}catch(e){alert('Invalid JSON — paste the exact config object from Firebase console.');}
+});
 const GROQ_KEY=localStorage.getItem('groq_key')||'';
 const GROQ_MODEL='llama-3.3-70b-versatile';
 const aiMsgs=document.getElementById('aiMsgs');
