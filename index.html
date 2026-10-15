@@ -395,12 +395,12 @@ const waveCtx=waveCanvas.getContext('2d');
 let waveTime=0;
 let currentAccent='#7c3aed';
 function resizeWave(){waveCanvas.width=window.innerWidth;waveCanvas.height=window.innerHeight;initRain();initSnow();}
+let rainDrops=[];
+let snowFlakes=[];
 resizeWave();window.addEventListener('resize',resizeWave);
 let fxMode=localStorage.getItem('fxMode')||'waves';
 function hexA(h,a){try{const n=parseInt(h.slice(1),16);return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';}catch(e){return 'rgba(124,58,237,'+a+')';}}
-let rainDrops=[];
 function initRain(){rainDrops=[];for(let i=0;i<130;i++)rainDrops.push({x:Math.random()*waveCanvas.width,y:Math.random()*waveCanvas.height,l:10+Math.random()*22,s:9+Math.random()*11});}
-let snowFlakes=[];
 function initSnow(){snowFlakes=[];for(let i=0;i<110;i++)snowFlakes.push({x:Math.random()*waveCanvas.width,y:Math.random()*waveCanvas.height,r:1+Math.random()*2.5,s:.4+Math.random()*1.2,ph:Math.random()*6.28});}
 document.querySelectorAll('#fxRow .mirror-btn').forEach(b=>{
 if(b.dataset.fx===fxMode)b.classList.add('active');
