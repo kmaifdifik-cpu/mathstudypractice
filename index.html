@@ -309,7 +309,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 </div>
 <div class="toggle-row"><span>Cursor trail</span><button class="toggle on" id="cursorTrailToggle"></button></div>
 <div class="toggle-row"><span>Trail color</span><input type="color" id="trailColor" value="#7c3aed" style="width:36px;height:28px;padding:0;border:1px solid var(--border);border-radius:6px;background:transparent;cursor:pointer"></div>
-<div class="toggle-row"><span>Ads (off until you reopen the site)</span><button class="toggle on" id="adsToggle"></button></div>
+<div class="toggle-row"><span>Ads (off until refresh)</span><button class="toggle on" id="adsToggle"></button></div>
 <div><h3>Download</h3>
 <div class="custom-row"><button id="dlPage">Download this page (.html)</button></div>
 </div>
@@ -591,11 +591,10 @@ function loadAds(){if(document.querySelector('script[data-ads-zone]'))return;var
 function setAds(on){
 adsOn=on;
 document.getElementById('adsToggle').classList.toggle('on',on);
-if(on){try{sessionStorage.removeItem('adsOff');}catch(e){}loadAds();}
+if(on){loadAds();}
 else{
-try{sessionStorage.setItem('adsOff','1');}catch(e){}
-// Reload guarantees the ad tag never runs this session, so OFF is total
-location.reload();
+const s=document.querySelector('script[data-ads-zone]');
+if(s)s.remove();
 }
 }
 document.getElementById('adsToggle').addEventListener('click',()=>{
@@ -604,10 +603,9 @@ if(confirm('If you turn off ads it won\'t help us earn money for a VPS and links
 }else{setAds(true);}
 });
 (function(){
-let off=false;
-try{off=sessionStorage.getItem('adsOff')==='1';}catch(e){}
-if(off){adsOn=false;document.getElementById('adsToggle').classList.remove('on');}
-else{adsOn=true;document.getElementById('adsToggle').classList.add('on');loadAds();}
+adsOn=true;
+document.getElementById('adsToggle').classList.add('on');
+loadAds();
 })();
 // ── Download single file ─────────────────────────────────────────────────────
 document.getElementById('dlPage').addEventListener('click',async()=>{
