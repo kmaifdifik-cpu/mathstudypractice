@@ -1108,7 +1108,11 @@ function loadNostr(){
 if(window.Nostr)return Promise.resolve(true);
 return new Promise((res,rej)=>{
 function add(src){return new Promise((rs,rj)=>{const el=document.createElement('script');el.src=src;el.onload=rs;el.onerror=()=>rj(new Error('load '+src));document.head.appendChild(el);});}
-add('https://cdn.jsdelivr.net/npm/nostr-tools@2.7.2/lib/nostr.bundle.js').catch(()=>add('https://unpkg.com/nostr-tools@2.7.2/lib/nostr.bundle.js')).then(()=>{if(window.Nostr)res(true);else rej(new Error('Nostr library failed to load.'));}).catch(rej);
+add('nostr.bundle.js')
+.catch(()=>add('https://cdn.jsdelivr.net/npm/nostr-tools@2.7.2/lib/nostr.bundle.js'))
+.catch(()=>add('https://unpkg.com/nostr-tools@2.7.2/lib/nostr.bundle.js'))
+.then(()=>{if(window.Nostr)res(true);else rej(new Error('Chat engine failed to load. Reopen Chat to retry.'));})
+.catch(()=>rej(new Error('Chat engine failed to load (network blocked file). Try another network.')));
 });
 }
 function nFriends(){try{return JSON.parse(localStorage.getItem('nostr_friends')||'[]');}catch(e){return[];}}
