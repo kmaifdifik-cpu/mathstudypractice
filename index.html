@@ -267,11 +267,11 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 </div>
 <div><h3>CDN mirrors</h3>
 <div class="mirror-row" id="mirrorRow">
-<button class="mirror-btn" data-mirror="https://quantil.jsdelivr.net/gh">quantil.jsdelivr.net</button>
-<button class="mirror-btn" data-mirror="https://cdn.jsdelivr.net/gh">cdn.jsdelivr.net</button>
-<button class="mirror-btn" data-mirror="https://fastly.jsdelivr.net/gh">fastly.jsdelivr.net</button>
-<button class="mirror-btn" data-mirror="https://gcore.jsdelivr.net/gh">gcore.jsdelivr.net</button>
-<button class="mirror-btn" data-mirror="https://testingcf.jsdelivr.net/gh">testingcf.jsdelivr.net</button>
+<button class="mirror-btn" data-link="https://quantil.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@main/index.html">quantil.jsdelivr.net</button>
+<button class="mirror-btn" data-link="https://cdn.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@main/index.html">cdn.jsdelivr.net</button>
+<button class="mirror-btn" data-link="https://fastly.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@main/index.html">fastly.jsdelivr.net</button>
+<button class="mirror-btn" data-link="https://gcore.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@main/index.html">gcore.jsdelivr.net</button>
+<button class="mirror-btn" data-link="https://testingcf.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@main/index.html">testingcf.jsdelivr.net</button>
 </div>
 </div>
 </div>
@@ -543,13 +543,8 @@ return url;
 }catch(e){return url;}
 }
 document.querySelectorAll('.mirror-btn').forEach(b=>{
-if(b.dataset.mirror===cdnMirror)b.classList.add('active');
 b.addEventListener('click',()=>{
-document.querySelectorAll('.mirror-btn').forEach(x=>x.classList.remove('active'));
-b.classList.add('active');
-cdnMirror=b.dataset.mirror;
-localStorage.setItem('cdnMirror',cdnMirror);
-loadGN();loadUGS();
+window.open(b.dataset.link,'_blank','noopener');
 });
 });
 // ── Tab cloaks ─────────────────────────────────────────────────────────────
@@ -626,6 +621,18 @@ luminState='idle';
 document.head.appendChild(s);
 }
 window.__luminRetry=()=>{luminState='idle';const g=document.getElementById('games');if(g)g.innerHTML='';initLumin();};
+// Remove Lumin's Prev/1/2/3/Next pagination buttons (keep everything else)
+function stripLuminPages(){
+const gamesEl=document.getElementById('games');
+if(!gamesEl)return;
+const btns=Array.from(gamesEl.querySelectorAll('button,a')).filter(el=>{
+const t=(el.textContent||'').trim();
+return /^(prev|next)$/i.test(t)||/^\d{1,3}$/.test(t);
+});
+// Only strip when they appear as a group (a real pagination bar, not a game card)
+if(btns.length>=3)btns.forEach(el=>{el.style.display='none';});
+}
+new MutationObserver(stripLuminPages).observe(document.getElementById('games'),{childList:true,subtree:true});
 ensureScript(()=>{
 try{
 Lumin.init({container:'#games',theme:'dark'});
