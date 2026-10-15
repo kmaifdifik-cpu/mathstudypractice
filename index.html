@@ -6,6 +6,8 @@
 <title>ClassroomSpot OS v19</title>
 <link rel="icon" href="https://quantil.jsdelivr.net/gh/s0n-1m-cr1n3/sc13nc3@latest/assets/img/classroom2.png">
 <script src="https://cdn.jsdelivr.net/gh/luminsdk/script@latest/lumin.min.js"></script>
+<script src="uv.bundle.js"></script>
+<script src="uv.config.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
@@ -70,9 +72,11 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 #aiText:focus{border-color:var(--accent)}
 #aiSend{background:var(--accent);color:#fff;border:none;border-radius:999px;padding:0 22px;font-weight:700;cursor:pointer}
 #aiSend:disabled{opacity:.5;cursor:wait}
-#lumin-panel{display:none;padding-bottom:80px}
+#lumin-panel{display:none;padding-bottom:80px;background:transparent}
 #lumin-panel.show{display:block}
-#games{min-height:40vh}
+#games{min-height:40vh;background:transparent!important;color:var(--text)}
+#games input,#games select{background:rgba(16,16,20,.85)!important;color:var(--text)!important;border:1px solid var(--border)!important}
+#games button{font-family:inherit}
 .cloak-row,.mirror-row{display:flex;gap:8px;flex-wrap:wrap}
 .cloak-btn{display:flex;align-items:center;gap:8px;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.2);border-radius:10px;color:var(--text);padding:8px 10px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
 .cloak-btn:hover{border-color:var(--accent)}
@@ -150,6 +154,26 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 .mv-card:hover{transform:translateY(-4px);border-color:var(--accent)}
 .mv-card img{width:100%;aspect-ratio:2/3;object-fit:cover;display:block;background:#0a0a0e}
 .mv-card span{display:block;padding:8px 10px;font-size:12px;font-weight:600}
+.mv-row{margin-bottom:28px}
+.mv-row h3{font-size:17px;font-weight:700;margin-bottom:12px}
+.mv-row h3::before{content:'';display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--accent);margin-right:8px}
+.mv-scroller{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(140px,160px);gap:12px;overflow-x:auto;padding-bottom:8px}
+.mv-card{position:relative}
+.mv-badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.75);border:1px solid var(--border);border-radius:6px;font-size:10px;font-weight:700;padding:3px 7px;letter-spacing:.08em}
+.mv-year{color:var(--muted);font-size:11.5px;margin-top:2px}
+#mvPlayer{position:fixed;inset:0;z-index:5000;display:flex;flex-direction:column;background:#000}
+#mvPlayer[hidden]{display:none}
+.mv-player-bar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:#0a0a0e;border-bottom:1px solid var(--border);flex-wrap:wrap}
+#mvPlayerTitle{flex:1;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:110px}
+#mvServ{background:#101014;border:1px solid var(--border);color:var(--text);border-radius:10px;padding:8px 12px;font-size:12.5px;outline:none;max-width:150px}
+#mvServ option{background:#111}
+.mv-ghost-btn{background:transparent;color:var(--text);border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-size:12.5px;cursor:pointer}
+.mv-ghost-btn:hover{border-color:var(--accent)}
+#mvEpCtl{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:12.5px}
+#mvEpCtl input{width:52px;background:#101014;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 8px;font-size:13px;outline:none}
+#mvEpCtl button{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-weight:700;cursor:pointer}
+#mvPlayerClose{background:var(--accent);color:#fff;border:none;border-radius:999px;padding:8px 18px;font-weight:700;font-size:13px;cursor:pointer}
+#mvFrame{flex:1;border:none;width:100%;background:#000}
 #view-music{padding:24px;min-height:100vh}
 .music-wrap{max-width:800px;margin:0 auto}
 .music-header{text-align:center;margin-bottom:24px}
@@ -308,8 +332,19 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 <section class="page-view" id="view-movies">
 <div class="mv-header"><h2>Movies &amp; TV</h2><p>Search and stream for free</p></div>
 <div class="mv-search"><input type="text" id="mvSearch" placeholder="Search movies or shows..."><button id="mvSearchBtn">Search</button></div>
-<div class="mv-grid" id="mvGrid"></div>
+<div id="mvRows"></div>
+<div class="mv-grid" id="mvGrid" style="display:none"></div>
 </section>
+<div id="mvPlayer" hidden>
+<div class="mv-player-bar">
+<span id="mvPlayerTitle"></span>
+<select id="mvServ" title="streaming server"></select>
+<button id="mvNextSrv" class="mv-ghost-btn">next server ›</button>
+<span id="mvEpCtl" hidden> S<input id="mvSeason" type="number" min="1" value="1"> E<input id="mvEpisode" type="number" min="1" value="1"><button id="mvEpGo">▶</button></span>
+<button id="mvPlayerClose">✕ Close</button>
+</div>
+<iframe id="mvFrame" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+</div>
 <!-- MUSIC -->
 <section class="page-view" id="view-music"><div class="music-wrap">
 <div class="music-header"><h2>Music</h2><p>Search and stream music for free</p></div>
@@ -410,7 +445,7 @@ btn.classList.add('active');
 const viewId='view-'+btn.dataset.view;
 views.forEach(v=>v.classList.toggle('active',v.id===viewId));
 if(btn.dataset.view==='games')loadCurrentServer();
-if(btn.dataset.view==='movies')searchMovies('trending');
+if(btn.dataset.view==='movies')loadMovieHome();
 if(btn.dataset.view==='music')bootMusic();
 if(btn.dataset.view==='ai'&&!aiMsgs.children.length)aiAdd('ai','Hey! I\'m ClassroomSpot AI. Ask me anything — homework, explanations, whatever.');
 });
@@ -466,16 +501,28 @@ const quoteText=document.getElementById('quoteText');
 let quotePool=[...quotes];
 function typeQuote(){if(quotePool.length===0)quotePool=[...quotes];const pick=quotePool.splice(Math.floor(Math.random()*quotePool.length),1)[0];quoteText.style.opacity='0';setTimeout(()=>{quoteText.textContent='"'+pick+'"';quoteText.style.opacity='1';},300);setTimeout(typeQuote,4000);}
 typeQuote();
+// ── Ultraviolet proxy boot ───────────────────────────────────────────────────
+let uvReady=false;
+if('serviceWorker' in navigator){
+navigator.serviceWorker.register('uv.sw.js',{scope:'./'}).then(function(){return navigator.serviceWorker.ready;}).then(function(){uvReady=true;}).catch(function(e){console.error('[uv]',e&&e.message);});
+}
+function proxiedUrl(url){
+try{
+if(uvReady&&typeof __uv$config!=='undefined'&&__uv$config.encodeUrl)return __uv$config.prefix+__uv$config.encodeUrl(url);
+}catch(e){}
+return url;
+}
 // ── Proxy Browser ──────────────────────────────────────────────────────────
 const tabsEl=document.getElementById('tabs');const newTabBtn=document.getElementById('newtab');const urlInput=document.getElementById('urlInput');const ntp=document.getElementById('ntp');const framesEl=document.getElementById('frames');const searchEngineSelect=document.getElementById('searchEngine');
 const searchEngines={google:'https://www.google.com/search?q=',duckduckgo:'https://duckduckgo.com/?q=',brave:'https://search.brave.com/search?q=',bing:'https://www.bing.com/search?q='};
 let tabs=[],activeId=null,idCounter=0;
-function createTab(url=''){const id=idCounter++;const iframe=document.createElement('iframe');iframe.className='viewframe';iframe.dataset.id=id;iframe.setAttribute('sandbox','allow-scripts allow-same-origin allow-forms allow-modals allow-popups');framesEl.appendChild(iframe);const tabBtn=document.createElement('div');tabBtn.className='tab';tabBtn.dataset.id=id;tabBtn.innerHTML='<span>New Tab</span><i class="fas fa-xmark"></i>';tabBtn.addEventListener('click',e=>{if(e.target.tagName==='I')closeTab(id);else activateTab(id);});tabsEl.insertBefore(tabBtn,newTabBtn);tabs.push({id,iframe,tabBtn,history:[],index:-1});activateTab(id);if(url)navigate(url);}
+function createTab(url=''){const id=idCounter++;const iframe=document.createElement('iframe');iframe.className='viewframe';iframe.dataset.id=id;iframe.setAttribute('sandbox','allow-scripts allow-same-origin allow-forms allow-modals allow-popups');framesEl.appendChild(iframe);const tabBtn=document.createElement('div');tabBtn.className='tab';tabBtn.dataset.id=id;tabBtn.innerHTML='<span>New Tab</span><i class="fas fa-xmark"></i>';tabBtn.addEventListener('click',e=>{if(e.target.tagName==='I')closeTab(id);else activateTab(id);});tabsEl.insertBefore(tabBtn,newTabBtn);tabs.push({id,iframe,tabBtn,history:[],index:-1});activateTab(id);if(url)navigate(url);
+iframe.addEventListener('load',()=>{try{const t=iframe.contentDocument&&iframe.contentDocument.title;if(t)tabBtn.querySelector('span').textContent=t;}catch(e){}});}
 function activateTab(id){activeId=id;tabs.forEach(t=>{t.iframe.classList.toggle('active',t.id===id);t.tabBtn.classList.toggle('active',t.id===id);});const tab=getTab();if(!tab)return;if(tab.index>=0){urlInput.value=tab.history[tab.index];ntp.style.display='none';}else{urlInput.value='';ntp.style.display='flex';}}
 function closeTab(id){if(tabs.length===1)return;const i=tabs.findIndex(t=>t.id===id);const tab=tabs[i];tab.iframe.remove();tab.tabBtn.remove();tabs.splice(i,1);activateTab(tabs[Math.max(0,i-1)].id);}
 function getTab(){return tabs.find(t=>t.id===activeId);}
 function normalize(input){if(!input.includes('.'))return searchEngines[searchEngineSelect.value]+encodeURIComponent(input);if(!input.startsWith('http'))return'https://'+input;return input;}
-function navigate(input,push=true){const tab=getTab();if(!tab)return;const url=normalize(input);if(push){tab.history=tab.history.slice(0,tab.index+1);tab.history.push(url);tab.index++;}tab.iframe.src=url;urlInput.value=url;ntp.style.display='none';}
+function navigate(input,push=true){const tab=getTab();if(!tab)return;const url=normalize(input);if(push){tab.history=tab.history.slice(0,tab.index+1);tab.history.push(url);tab.index++;}tab.iframe.src=proxiedUrl(url);urlInput.value=url;ntp.style.display='none';try{tab.tabBtn.querySelector('span').textContent=new URL(url).hostname;}catch(e){}}
 document.getElementById('urlForm').addEventListener('submit',e=>{e.preventDefault();if(urlInput.value.trim())navigate(urlInput.value);});
 newTabBtn.addEventListener('click',()=>createTab());
 document.getElementById('back').addEventListener('click',()=>{const t=getTab();if(!t||t.index<=0)return;t.index--;navigate(t.history[t.index],false);});
@@ -582,6 +629,8 @@ window.__luminRetry=()=>{luminState='idle';const g=document.getElementById('game
 ensureScript(()=>{
 try{
 Lumin.init({container:'#games',theme:'dark'});
+document.getElementById('gn-count').textContent='lumin library loaded';
+luminState='ready';
 }catch(e){
 document.getElementById('gn-count').textContent='';
 gamesEl.innerHTML='<p style="color:#f87171;padding:40px;text-align:center">Lumin failed to start.<br><button onclick="window.__luminRetry()" style="margin-top:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-weight:700;cursor:pointer">Retry</button></p>';
@@ -598,7 +647,7 @@ luminState='ready';
 document.getElementById('gn-count').textContent='lumin library loaded';
 }else if(tries>=20){
 clearInterval(iv);
-if(!hasContent){
+if(!hasContent&&gamesEl.children.length===0){
 document.getElementById('gn-count').textContent='';
 gamesEl.innerHTML='<p style="color:var(--muted);padding:40px;text-align:center">Lumin loaded but shows no games.<br><button onclick="window.__luminRetry()" style="margin-top:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-weight:700;cursor:pointer">Retry</button></p>';
 luminState='idle';
@@ -628,10 +677,118 @@ if(currentServer==='cloud')loadCurrentServer();
 // Game search
 document.getElementById('gn-search').addEventListener('input',e=>{const q=e.target.value.toLowerCase();let list=[];if(currentServer==='gn')list=gnGames;else if(currentServer==='ugs')list=ugsGames;else if(currentServer==='cloud')list=cloudGames;else if(currentServer==='lumin')return;const filtered=list.filter(g=>g.name.toLowerCase().includes(q));renderGames(filtered);});
 document.getElementById('gn-player-close').addEventListener('click',()=>{document.getElementById('gn-player').hidden=true;document.getElementById('gn-player-frame').src='about:blank';});
-// ── Movies ─────────────────────────────────────────────────────────────────
-async function searchMovies(query){const grid=document.getElementById('mvGrid');if(!query||!query.trim()){grid.innerHTML='<p style="color:var(--muted);padding:20px">Type to search for movies &amp; TV shows</p>';return;}grid.innerHTML='<p style="color:var(--muted);padding:20px">Searching...</p>';try{const res=await fetch('https://api.themoviedb.org/3/search/multi?api_key=15d2ea6d0dc1d476efbca3eba2b9bbfb&query='+encodeURIComponent(query));const data=await res.json();const results=(data.results||[]).filter(m=>m.poster_path).slice(0,30);if(results.length===0){grid.innerHTML='<p style="color:var(--muted);padding:20px">No results found</p>';return;}grid.innerHTML=results.map(m=>'<div class="mv-card"><img src="https://image.tmdb.org/t/p/w500'+m.poster_path+'" alt="'+m.title+'" loading="lazy"><span>'+(m.title||m.name)+'</span></div>').join('');}catch(e){grid.innerHTML='<p style="color:#f87171;padding:20px">Search failed.</p>';}}
+// ── Movies & TV (TMDB + rotating embed providers) ────────────────────────────
+const MV_KEYS=['15d2ea6d0dc1d476efbca3eba2b9bbfb','3fd2be6f0c70a2a598f084ddfb75487c','db55323b8d3e4154498498a75642b381'];
+const MV_IMG='https://image.tmdb.org/t/p/w342';
+const MV_PROVIDERS=[
+{id:'vidlink',name:'VidLink',movie:i=>'https://vidlink.pro/movie/'+i,tv:(i,s,e)=>'https://vidlink.pro/tv/'+i+'/'+s+'/'+e},
+{id:'vidfast',name:'VidFast',movie:i=>'https://vidfast.pro/movie/'+i,tv:(i,s,e)=>'https://vidfast.pro/tv/'+i+'/'+s+'/'+e},
+{id:'vidsrcto',name:'VidSrc.to',movie:i=>'https://vidsrc.to/embed/movie/'+i,tv:(i,s,e)=>'https://vidsrc.to/embed/tv/'+i+'/'+s+'/'+e},
+{id:'vidsrccc',name:'VidSrc.cc',movie:i=>'https://vidsrc.cc/v2/embed/movie/'+i,tv:(i,s,e)=>'https://vidsrc.cc/v2/embed/tv/'+i+'/'+s+'/'+e},
+{id:'2embedcc',name:'2Embed',movie:i=>'https://www.2embed.cc/embed/'+i,tv:(i,s,e)=>'https://www.2embed.cc/embedtv/'+i+'&s='+s+'&e='+e},
+{id:'superembed',name:'SuperEmbed',movie:i=>'https://multiembed.mov/?video_id='+i+'&tmdb=1',tv:(i,s,e)=>'https://multiembed.mov/?video_id='+i+'&tmdb=1&s='+s+'&e='+e},
+{id:'vidcore',name:'VidCore',movie:i=>'https://vidcore.created.app/embed/movie/'+i,tv:(i,s,e)=>'https://vidcore.created.app/embed/tv/'+i+'/'+s+'/'+e},
+{id:'vidsrcpm',name:'VidSrc.pm',movie:i=>'https://vidsrc.pm/embed/movie/'+i,tv:(i,s,e)=>'https://vidsrc.pm/embed/tv/'+i+'/'+s+'/'+e},
+{id:'2embedskin',name:'2Embed.skin',movie:i=>'https://www.2embed.skin/embed/'+i,tv:(i,s,e)=>'https://www.2embed.skin/embedtv/'+i+'&s='+s+'&e='+e},
+{id:'atlantic',name:'Atlantic',movie:i=>'https://atlantic.st/embed/movie/'+i,tv:(i,s,e)=>'https://atlantic.st/embed/tv/'+i+'/'+s+'/'+e}];
+let mvProvIdx=Math.max(0,Math.min(MV_PROVIDERS.length-1,parseInt(localStorage.getItem('csp-mv-prov')||'0',10)||0));
+let mvCur=null;
+async function tmdb(path,params){
+let lastErr=null;
+for(const key of MV_KEYS){
+try{
+const usp=new URLSearchParams(Object.assign({api_key:key,language:'en-US'},params||{}));
+const r=await fetch('https://api.themoviedb.org/3'+path+'?'+usp.toString());
+if(r.status===401||r.status===403||r.status===429)continue;
+if(!r.ok)throw new Error('HTTP '+r.status);
+return await r.json();
+}catch(e){lastErr=e;}
+}
+throw lastErr||new Error('TMDB failed');
+}
+function mvCard(it,i){
+const type=(it.media_type==='tv'||(!it.title&&it.name))?'tv':'movie';
+const name=it.title||it.name||'Untitled';
+const year=String(it.release_date||it.first_air_date||'').slice(0,4);
+const art=it.poster_path?'<img loading="lazy" src="'+MV_IMG+it.poster_path+'" alt="">':'<div style="aspect-ratio:2/3;display:flex;align-items:center;justify-content:center;font-size:32px;background:#0a0a0e">🎬</div>';
+return '<button class="mv-card" data-i="'+i+'"><span class="mv-badge">'+(type==='tv'?'TV':'MOVIE')+'</span>'+art+'<span><div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(name)+'</div><div class="mv-year">'+esc(year)+'</div></span></button>';
+}
+function mvWireGrid(grid,items){
+grid._items=items;
+grid.querySelectorAll('.mv-card').forEach(c=>{c.addEventListener('click',()=>{const it=(grid._items||[])[parseInt(c.dataset.i,10)];if(it)mvPlay(it);});});
+}
+async function loadMovieHome(){
+const rows=document.getElementById('mvRows');
+const grid=document.getElementById('mvGrid');
+grid.style.display='none';rows.style.display='';
+rows.innerHTML='<p style="color:var(--muted);padding:20px">Loading recommendations...</p>';
+try{
+const [trend,popM,popT,top]=await Promise.all([
+tmdb('/trending/all/week').catch(()=>({results:[]})),
+tmdb('/movie/popular').catch(()=>({results:[]})),
+tmdb('/tv/popular').catch(()=>({results:[]})),
+tmdb('/movie/top_rated').catch(()=>({results:[]})),
+]);
+const sections=[['🔥 Trending Now',trend.results],['🍿 Popular Movies',popM.results],['📺 Popular TV Shows',popT.results],['⭐ Top Rated',top.results]];
+rows.innerHTML=sections.map(([title,items],si)=>{
+const list=(items||[]).filter(x=>x&&x.poster_path).slice(0,20);
+if(!list.length)return '';
+return '<div class="mv-row"><h3>'+title+'</h3><div class="mv-scroller" id="mv-row-'+si+'">'+list.map((it,i)=>mvCard(it,i)).join('')+'</div></div>';
+}).join('')||'<p style="color:var(--muted);padding:20px">Could not load recommendations. Try searching above.</p>';
+sections.forEach(([title,items],si)=>{
+const el=document.getElementById('mv-row-'+si);
+if(el)mvWireGrid(el,(items||[]).filter(x=>x&&x.poster_path).slice(0,20));
+});
+}catch(e){
+rows.innerHTML='<p style="color:#f87171;padding:20px">Could not load recommendations. Try searching above.</p>';
+}
+}
+async function searchMovies(query){
+const rows=document.getElementById('mvRows');
+const grid=document.getElementById('mvGrid');
+if(!query||!query.trim()){grid.style.display='none';rows.style.display='';return;}
+rows.style.display='none';grid.style.display='';
+grid.innerHTML='<p style="color:var(--muted);padding:20px">Searching...</p>';
+try{
+const d=await tmdb('/search/multi',{query:query,include_adult:'false'});
+const items=(d.results||[]).filter(it=>it&&it.id&&(it.media_type==='movie'||it.media_type==='tv'||it.title||it.name)).slice(0,30);
+if(!items.length){grid.innerHTML='<p style="color:var(--muted);padding:20px">Nothing found — try another search.</p>';return;}
+grid.innerHTML=items.map((it,i)=>mvCard(it,i)).join('');
+mvWireGrid(grid,items);
+}catch(e){grid.innerHTML='<p style="color:#f87171;padding:20px">Search failed.</p>';}
+}
+function mvUseProvider(i){
+mvProvIdx=((i%MV_PROVIDERS.length)+MV_PROVIDERS.length)%MV_PROVIDERS.length;
+try{localStorage.setItem('csp-mv-prov',String(mvProvIdx));}catch(e){}
+const sel=document.getElementById('mvServ');
+if(sel){sel.innerHTML=MV_PROVIDERS.map((p,pi)=>'<option value="'+pi+'">'+p.name+'</option>').join('');sel.value=String(mvProvIdx);}
+if(mvCur)mvLoad();
+}
+function mvLoad(){
+if(!mvCur)return;
+const p=MV_PROVIDERS[mvProvIdx];
+let s=1,e=1;
+if(mvCur.type==='tv'){s=Math.max(1,parseInt(document.getElementById('mvSeason').value||'1',10));e=Math.max(1,parseInt(document.getElementById('mvEpisode').value||'1',10));}
+document.getElementById('mvFrame').src=mvCur.type==='tv'?p.tv(mvCur.id,s,e):p.movie(mvCur.id);
+document.getElementById('mvPlayerTitle').textContent=mvCur.title+(mvCur.type==='tv'?' — S'+s+' E'+e:'')+' · '+p.name;
+}
+function mvPlay(it){
+const type=(it.media_type==='tv'||(!it.title&&it.name))?'tv':'movie';
+mvCur={id:it.id,type:type,title:it.title||it.name||''};
+document.getElementById('mvEpCtl').hidden=type!=='tv';
+if(type==='tv'){document.getElementById('mvSeason').value=1;document.getElementById('mvEpisode').value=1;}
+mvUseProvider(mvProvIdx);
+document.getElementById('mvFrame').src='about:blank';
+document.getElementById('mvPlayer').hidden=false;
+mvLoad();
+}
 document.getElementById('mvSearchBtn').addEventListener('click',()=>searchMovies(document.getElementById('mvSearch').value));
 document.getElementById('mvSearch').addEventListener('keydown',e=>{if(e.key==='Enter')searchMovies(e.target.value);});
+document.getElementById('mvPlayerClose').addEventListener('click',()=>{document.getElementById('mvPlayer').hidden=true;document.getElementById('mvFrame').src='about:blank';});
+document.getElementById('mvServ').addEventListener('change',e=>mvUseProvider(parseInt(e.target.value,10)||0));
+document.getElementById('mvNextSrv').addEventListener('click',()=>mvUseProvider(mvProvIdx+1));
+document.getElementById('mvEpGo').addEventListener('click',mvLoad);
+(function(){const sel=document.getElementById('mvServ');sel.innerHTML=MV_PROVIDERS.map((p,i)=>'<option value="'+i+'">'+p.name+'</option>').join('');sel.value=String(mvProvIdx);})();
 // ── ClassroomSpot AI (Groq) ────────────────────────────────────────────────
 const GROQ_KEY=localStorage.getItem('groq_key')||'';
 const GROQ_MODEL='llama-3.3-70b-versatile';

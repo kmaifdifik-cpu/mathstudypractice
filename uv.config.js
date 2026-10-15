@@ -1,5 +1,7 @@
+(function(){
+var base=self.location.pathname.replace(/[^/]*$/,'');
 self.__uv$config = {
-    prefix: '/uv/service/',
+    prefix: base+'uv/service/',
     bare: [
         'https://bare.coolblue.me/',
         'https://bare.9260300.xyz/',
@@ -7,8 +9,9 @@ self.__uv$config = {
     ],
     encodeUrl: Ultraviolet.codec.xor.encode,
     decodeUrl: Ultraviolet.codec.xor.decode,
-    handler: '/uv/uv.handler.js',
-    bundle: '/uv/uv.bundle.js',
-    config: '/uv/uv.config.js',
-    sw: '/uv/uv.sw.js',
+    handler: base+'uv.handler.js',
+    bundle: base+'uv.bundle.js',
+    config: base+'uv.config.js',
+    sw: base+'uv.sw.js',
 };
+})();
