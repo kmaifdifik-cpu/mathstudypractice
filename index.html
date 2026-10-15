@@ -285,7 +285,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 <button class="dock-btn" data-view="chat" title="Chat"><i class="fas fa-comments"></i></button>
 <div class="dock-sep"></div>
 <button class="dock-btn" id="dockSettingsBtn" title="Settings"><i class="fas fa-cog"></i></button>
-<button class="dock-btn discord-btn" onclick="window.open('https://discord.com/invite/A4PhtpN5Q','_blank')" title="Discord">
+<button class="dock-btn discord-btn" onclick="window.__siteOpen('https://discord.com/invite/A4PhtpN5Q','_blank')" title="Discord">
 <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR0hYuyxdAgrKOlEeGtlGDAqvmeYqyzLYr57DWV6uoljg&s=10" alt="Discord" style="width:24px;height:24px;object-fit:contain;border-radius:6px">
 </button>
 </nav>
@@ -482,10 +482,10 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 </div>
 </div>
 <div class="ctx-menu" id="ctxMenu">
-<button onclick="window.open(window.location.href,'_blank')"><i class="fas fa-external-link"></i> Open in new tab</button>
+<button onclick="window.__siteOpen(window.location.href,'_blank')"><i class="fas fa-external-link"></i> Open in new tab</button>
 <button onclick="window.location.reload()"><i class="fas fa-rotate"></i> Reload</button>
 <button onclick="document.getElementById('settingsPanel').classList.toggle('open')"><i class="fas fa-cog"></i> Settings</button>
-<button onclick="window.open('https://discord.com/invite/A4PhtpN5Q','_blank')"><i class="fab fa-discord"></i> Discord</button>
+<button onclick="window.__siteOpen('https://discord.com/invite/A4PhtpN5Q','_blank')"><i class="fab fa-discord"></i> Discord</button>
 <button onclick="document.getElementById('bgUpload').click()"><i class="fas fa-image"></i> Change background</button>
 </div>
 <script>
@@ -588,6 +588,13 @@ b.addEventListener('click',()=>applyTheme(b.dataset.theme));
 // ── Ads (Monetag, session-only: fresh visit always starts ON) ──────────────────
 let adsOn=true;
 function loadAds(){if(document.querySelector('script[data-ads-zone]'))return;var s=document.createElement('script');s.src='https://quge5.com/88/tag.min.js';s.setAttribute('data-zone','295950');s.async=true;s.setAttribute('data-cfasync','false');s.setAttribute('data-ads-zone','1');document.body.appendChild(s);}
+// Block popups (including the ad tag's) while ads are off. Internal links use __siteOpen to bypass.
+const rawOpen=window.open.bind(window);
+window.__siteOpen=function(u,t,r){return rawOpen(u,t||'_blank',r);};
+window.open=function(u,t,r){if(!adsOn)return null;return rawOpen(u,t,r);};
+function armAds(){if(adsOn)loadAds();}
+window.addEventListener('pointerdown',function bootAds(){window.removeEventListener('pointerdown',bootAds);armAds();});
+window.addEventListener('keydown',function bootAdsK(){window.removeEventListener('keydown',bootAdsK);armAds();});
 function setAds(on){
 adsOn=on;
 document.getElementById('adsToggle').classList.toggle('on',on);
@@ -605,7 +612,7 @@ if(confirm('If you turn off ads it won\'t help us earn money for a VPS and links
 (function(){
 adsOn=true;
 document.getElementById('adsToggle').classList.add('on');
-loadAds();
+// Tag loads on first user gesture (so turning ads off beforehand fully prevents it)
 })();
 // ── Download single file ─────────────────────────────────────────────────────
 document.getElementById('dlPage').addEventListener('click',async()=>{
@@ -755,7 +762,7 @@ return url;
 }
 document.querySelectorAll('#mirrorRow .mirror-btn').forEach(b=>{
 b.addEventListener('click',()=>{
-window.open(b.dataset.link,'_blank','noopener');
+window.__siteOpen(b.dataset.link,'_blank','noopener');
 });
 });
 // ── Tab cloaks ─────────────────────────────────────────────────────────────
