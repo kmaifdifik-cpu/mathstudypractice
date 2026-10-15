@@ -102,6 +102,10 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 .urlbar input::placeholder{color:rgba(255,255,255,.35)}
 .search-engine-select{background:transparent;border:none;color:#fff;font-size:12px;cursor:pointer;outline:none;padding-right:4px}
 .search-engine-select option{background:#111;color:#fff}
+#uvStatus{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);white-space:nowrap}
+.uv-dot{width:8px;height:8px;border-radius:50%;background:#fbbf24;animation:pulse 1s infinite}
+.uv-dot.on{background:#34d399;animation:none}
+.uv-dot.off{background:#f87171;animation:none}
 #frames{position:relative;flex:1;min-height:0;background:transparent}
 .viewframe{position:absolute;inset:0;width:100%;height:100%;border:none;display:none;background:transparent}
 .viewframe.active{display:block}
@@ -157,7 +161,8 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 .mv-row{margin-bottom:28px}
 .mv-row h3{font-size:17px;font-weight:700;margin-bottom:12px}
 .mv-row h3::before{content:'';display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--accent);margin-right:8px}
-.mv-scroller{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(140px,160px);gap:12px;overflow-x:auto;padding-bottom:8px}
+.mv-scroller{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(140px,160px);gap:12px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none}
+.mv-scroller::-webkit-scrollbar{display:none}
 .mv-card{position:relative}
 .mv-badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.75);border:1px solid var(--border);border-radius:6px;font-size:10px;font-weight:700;padding:3px 7px;letter-spacing:.08em}
 .mv-year{color:var(--muted);font-size:11.5px;margin-top:2px}
@@ -254,8 +259,13 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 </div>
 <div class="toggle-row"><span>Cursor trail</span><button class="toggle on" id="cursorTrailToggle"></button></div>
 <div class="toggle-row"><span>Trail color</span><input type="color" id="trailColor" value="#7c3aed" style="width:36px;height:28px;padding:0;border:1px solid var(--border);border-radius:6px;background:transparent;cursor:pointer"></div>
-<div><h3>Groq API key (for AI)</h3>
-<div class="custom-row"><input type="password" id="groqKey" placeholder="gsk_..." style="flex:1;background:rgba(124,58,237,.08);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:9px 12px;font-size:12px;outline:none"><button id="saveGroq">Save</button></div>
+<div><h3>Background effect</h3>
+<div class="mirror-row" id="fxRow">
+<button class="mirror-btn" data-fx="waves">Waves</button>
+<button class="mirror-btn" data-fx="rain">Rain</button>
+<button class="mirror-btn" data-fx="snow">Snow</button>
+<button class="mirror-btn" data-fx="off">Off</button>
+</div>
 </div>
 <div><h3>Tab cloak</h3>
 <div class="cloak-row">
@@ -293,6 +303,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 </select>
 <input id="urlInput" placeholder="Search or enter address" autocomplete="off">
 </form>
+<span id="uvStatus" title="proxy status"><span class="uv-dot" id="uvDot"></span><span id="uvText">proxy…</span></span>
 </div>
 </div>
 <div id="frames">
@@ -312,10 +323,11 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 <div class="server-select">
 <h2>What server are you playing today?</h2>
 <div class="server-cards">
-<div class="server-card selected" data-server="gn"><img src="https://quantil.jsdelivr.net/gh/s0n-1m-cr1n3/sc13nc3/assets/img/gn.png" alt="GN-Math"><span>GN-Math</span></div>
+<div class="server-card selected" data-server="all"><i class="fas fa-layer-group" style="font-size:20px;color:var(--accent)"></i><span>All</span></div>
+<div class="server-card" data-server="gn"><img src="https://quantil.jsdelivr.net/gh/s0n-1m-cr1n3/sc13nc3/assets/img/gn.png" alt="GN-Math"><span>GN-Math</span></div>
 <div class="server-card" data-server="lumin"><img src="https://quantil.jsdelivr.net/gh/s0n-1m-cr1n3/sc13nc3/assets/img/lumin.png" alt="Lumin"><span>Lumin</span></div>
 <div class="server-card" data-server="ugs"><img src="https://quantil.jsdelivr.net/gh/s0n-1m-cr1n3/sc13nc3/assets/img/ugsdoc.png" alt="UGS"><span>UGS</span></div>
-<div class="server-card" data-server="cloud"><img src="https://quantil.jsdelivr.net/gh/s0n-1m-cr1n3/sc13nc3/assets/img/cinecloud.png" alt="Cloud"><span>Cloud Gaming</span></div>
+<div class="server-card" data-server="cloud"><img src="https://quantil.jsdelivr.net/gh/s0n-1m-cr1n3/sc13nc3@latest/assets/img/classroom2.png" alt="ClassroomSpot Cloud"><span>ClassroomSpot Cloud</span></div>
 </div>
 </div>
 <div class="gn-head">
@@ -382,11 +394,42 @@ const waveCanvas=document.getElementById('waveCanvas');
 const waveCtx=waveCanvas.getContext('2d');
 let waveTime=0;
 let currentAccent='#7c3aed';
-function resizeWave(){waveCanvas.width=window.innerWidth;waveCanvas.height=window.innerHeight;}
+function resizeWave(){waveCanvas.width=window.innerWidth;waveCanvas.height=window.innerHeight;initRain();initSnow();}
 resizeWave();window.addEventListener('resize',resizeWave);
+let fxMode=localStorage.getItem('fxMode')||'waves';
+function hexA(h,a){try{const n=parseInt(h.slice(1),16);return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';}catch(e){return 'rgba(124,58,237,'+a+')';}}
+let rainDrops=[];
+function initRain(){rainDrops=[];for(let i=0;i<130;i++)rainDrops.push({x:Math.random()*waveCanvas.width,y:Math.random()*waveCanvas.height,l:10+Math.random()*22,s:9+Math.random()*11});}
+let snowFlakes=[];
+function initSnow(){snowFlakes=[];for(let i=0;i<110;i++)snowFlakes.push({x:Math.random()*waveCanvas.width,y:Math.random()*waveCanvas.height,r:1+Math.random()*2.5,s:.4+Math.random()*1.2,ph:Math.random()*6.28});}
+document.querySelectorAll('#fxRow .mirror-btn').forEach(b=>{
+if(b.dataset.fx===fxMode)b.classList.add('active');
+b.addEventListener('click',()=>{
+document.querySelectorAll('#fxRow .mirror-btn').forEach(x=>x.classList.remove('active'));
+b.classList.add('active');
+fxMode=b.dataset.fx;
+localStorage.setItem('fxMode',fxMode);
+});
+});
 function drawWave(){
 waveCtx.clearRect(0,0,waveCanvas.width,waveCanvas.height);
 const w=waveCanvas.width,h=waveCanvas.height;
+if(fxMode==='rain'){
+waveCtx.strokeStyle=hexA(currentAccent,.5);waveCtx.lineWidth=1.2;waveCtx.beginPath();
+for(const d of rainDrops){
+waveCtx.moveTo(d.x,d.y);waveCtx.lineTo(d.x-3,d.y+d.l);
+d.y+=d.s;d.x-=1;
+if(d.y>h){d.y=-20;d.x=Math.random()*(w+40);}
+}
+waveCtx.stroke();
+}else if(fxMode==='snow'){
+for(const f of snowFlakes){
+f.y+=f.s;f.ph+=.02;f.x+=Math.sin(f.ph)*.6;
+if(f.y>h){f.y=-6;f.x=Math.random()*w;}
+waveCtx.beginPath();waveCtx.arc(f.x,f.y,f.r,0,Math.PI*2);
+waveCtx.fillStyle='rgba(255,255,255,.85)';waveCtx.fill();
+}
+}else if(fxMode==='waves'){
 const c=currentAccent;
 const colors=[c+'26',c+'1a',c+'12',c+'0d'];
 for(let l=0;l<4;l++){
@@ -502,9 +545,15 @@ function typeQuote(){if(quotePool.length===0)quotePool=[...quotes];const pick=qu
 typeQuote();
 // ── Ultraviolet proxy boot ───────────────────────────────────────────────────
 let uvReady=false;
-if('serviceWorker' in navigator){
-navigator.serviceWorker.register('uv.sw.js',{scope:'./'}).then(function(){return navigator.serviceWorker.ready;}).then(function(){uvReady=true;}).catch(function(e){console.error('[uv]',e&&e.message);});
+function uvStatus(state,text){
+const d=document.getElementById('uvDot'),t=document.getElementById('uvText');
+if(!d||!t)return;
+d.className='uv-dot '+state;t.textContent=text;
 }
+if('serviceWorker' in navigator){
+navigator.serviceWorker.register('uv.sw.js',{scope:'./'}).then(function(){return navigator.serviceWorker.ready;}).then(function(){uvReady=true;uvStatus('on','proxy ready');}).catch(function(e){console.error('[uv]',e&&e.message);uvStatus('off','proxy unavailable');});
+setTimeout(function(){if(!uvReady)uvStatus('off','proxy unavailable');},12000);
+}else{uvStatus('off','proxy unavailable');}
 function proxiedUrl(url){
 try{
 if(uvReady&&typeof __uv$config!=='undefined'&&__uv$config.encodeUrl)return __uv$config.prefix+__uv$config.encodeUrl(url);
@@ -567,7 +616,7 @@ else{document.title='ClassroomSpot OS v19';setFavicon('https://quantil.jsdelivr.
 });
 });
 (function(){const saved=localStorage.getItem('cloak');if(saved&&CLOAKS[saved]){document.title=CLOAKS[saved].title;setFavicon(CLOAKS[saved].icon);}})();
-let currentServer='gn';
+let currentServer='all';
 let gnGames=[];
 let ugsGames=[];
 let cloudGames=[];
@@ -578,15 +627,19 @@ function openInPlayer(name,url,key){
 document.getElementById('gn-player-title').textContent=name;
 document.getElementById('gn-player').hidden=false;
 const frame=document.getElementById('gn-player-frame');
-// Cloud games launch the Stratus WebRTC player
-if(currentServer==='cloud'&&key){frame.src='cloud.html?game='+encodeURIComponent(key);return;}
-if(url){if(typeof fetch!=='function'){frame.src=url;return;}fetch(url).then(r=>{if(!r.ok)throw new Error('fetch failed');return r.text();}).then(html=>{const base=String(url).replace(/[^/]*$/,'');if(!/<base\b/i.test(html))html=html.replace(/<head(.*?)>/i,'<head$1><base href="'+base+'">');const doc=frame.contentDocument;doc.open();doc.write(html);doc.close();}).catch(()=>{frame.src=url;});}else{frame.src='about:blank';}
+// Stratus cloud games launch the WebRTC player
+if(key){frame.src='cloud.html?game='+encodeURIComponent(key);return;}
+if(url){frame.src=url;return;}
+frame.src='about:blank';
+document.getElementById('gn-player-title').textContent=name+' (link coming soon)';
 }
 function renderGames(list){const grid=document.getElementById('gn-grid');grid.innerHTML=list.map(renderGameCard).join('');document.getElementById('gn-count').textContent=list.length+' games';grid.querySelectorAll('.gn-card').forEach(card=>{card.addEventListener('click',()=>{openInPlayer(card.dataset.game,card.dataset.url,card.dataset.key);});});}
+function allGames(){const seen={};const out=[];for(const g of gnGames.concat(ugsGames,cloudGames)){const k=(g.name||'').toLowerCase().replace(/[^a-z0-9]/g,'');if(k&&!seen[k]){seen[k]=true;out.push(g);}}return out;}
 function loadCurrentServer(){
 const grid=document.getElementById('gn-grid');
 const luminPanel=document.getElementById('lumin-panel');
-if(currentServer==='gn'){document.getElementById('gn-server-title').textContent='GN-Math Games';luminPanel.classList.remove('show');grid.style.display='';renderGames(gnGames);}
+if(currentServer==='all'){document.getElementById('gn-server-title').textContent='All Games';luminPanel.classList.remove('show');grid.style.display='';renderGames(allGames());}
+else if(currentServer==='gn'){document.getElementById('gn-server-title').textContent='GN-Math Games';luminPanel.classList.remove('show');grid.style.display='';renderGames(gnGames);}
 else if(currentServer==='ugs'){document.getElementById('gn-server-title').textContent='UGS Games';luminPanel.classList.remove('show');grid.style.display='';renderGames(ugsGames);}
 else if(currentServer==='lumin'){
 document.getElementById('gn-server-title').textContent='Lumin Games';
@@ -594,10 +647,10 @@ grid.style.display='none';
 luminPanel.classList.add('show');
 initLumin();
 }
-else if(currentServer==='cloud'){document.getElementById('gn-server-title').textContent='Cloud Gaming';luminPanel.classList.remove('show');grid.style.display='';renderGames(cloudGames);}
+else if(currentServer==='cloud'){document.getElementById('gn-server-title').textContent='ClassroomSpot Cloud Gaming';luminPanel.classList.remove('show');grid.style.display='';renderGames(cloudGames);}
 }
 // GN-Math: fetch from zones.json (via selected CDN mirror)
-function loadGN(){fetch(mirror('https://quantil.jsdelivr.net/gh/freebuisness/assets/zones.json')).then(r=>r.json()).then(d=>{const list=Array.isArray(d)?d:[];gnGames=[];const HTML_BASE=mirror('https://quantil.jsdelivr.net/gh/freebuisness/html@main');const COVER_BASE=mirror('https://quantil.jsdelivr.net/gh/freebuisness/covers@main');for(const z of list){if(z.id===-1||z.id===undefined)continue;const nm=String(z.name||'').trim();if(!nm||nm.indexOf('[!]')===0)continue;const gu=String(z.url||'').replace(/\{HTML_URL\}/g,HTML_BASE).replace(/\{COVER_URL\}/g,COVER_BASE).trim();const rc=String(z.cover||'').replace(/\{COVER_URL\}/g,COVER_BASE).trim();gnGames.push({name:nm,img:rc.indexOf('http')===0?rc:COVER_BASE+'/'+rc,url:gu.indexOf('http')===0?gu:HTML_BASE+'/'+z.id+'.html'});}if(currentServer==='gn')loadCurrentServer();}).catch(e=>console.error('[gn]',e));}
+function loadGN(){fetch(mirror('https://quantil.jsdelivr.net/gh/freebuisness/assets/zones.json')).then(r=>r.json()).then(d=>{const list=Array.isArray(d)?d:[];gnGames=[];const HTML_BASE=mirror('https://quantil.jsdelivr.net/gh/freebuisness/html@main');const COVER_BASE=mirror('https://quantil.jsdelivr.net/gh/freebuisness/covers@main');for(const z of list){if(z.id===-1||z.id===undefined)continue;const nm=String(z.name||'').trim();if(!nm||nm.indexOf('[!]')===0)continue;const gu=String(z.url||'').replace(/\{HTML_URL\}/g,HTML_BASE).replace(/\{COVER_URL\}/g,COVER_BASE).trim();const rc=String(z.cover||'').replace(/\{COVER_URL\}/g,COVER_BASE).trim();gnGames.push({name:nm,img:rc.indexOf('http')===0?rc:COVER_BASE+'/'+rc,url:gu.indexOf('http')===0?gu:HTML_BASE+'/'+z.id+'.html'});}if(currentServer==='gn'||currentServer==='all')loadCurrentServer();}).catch(e=>console.error('[gn]',e));}
 // Lumin: init SDK into the visible #games container, with retries + fallback UI
 let luminState='idle';
 function initLumin(){
@@ -620,16 +673,17 @@ luminState='idle';
 document.head.appendChild(s);
 }
 window.__luminRetry=()=>{luminState='idle';const g=document.getElementById('games');if(g)g.innerHTML='';initLumin();};
-// Remove Lumin's Prev/1/2/3/Next pagination buttons (keep everything else)
+// Remove Lumin's Prev/1/2/3/Next pagination controls (keep everything else)
 function stripLuminPages(){
 const gamesEl=document.getElementById('games');
 if(!gamesEl)return;
-const btns=Array.from(gamesEl.querySelectorAll('button,a')).filter(el=>{
+const cands=Array.from(gamesEl.querySelectorAll('button,a,span,li,div')).filter(el=>{
+if(el.querySelector('img'))return false;
 const t=(el.textContent||'').trim();
 return /^(prev|next)$/i.test(t)||/^\d{1,3}$/.test(t);
 });
-// Only strip when they appear as a group (a real pagination bar, not a game card)
-if(btns.length>=3)btns.forEach(el=>{el.style.display='none';});
+// Only strip when they appear as a group (a real pagination bar)
+if(cands.length>=3)cands.forEach(el=>{el.style.display='none';});
 }
 new MutationObserver(stripLuminPages).observe(document.getElementById('games'),{childList:true,subtree:true});
 ensureScript(()=>{
@@ -666,22 +720,18 @@ document.getElementById('gn-count').textContent='lumin library loaded';
 });
 }
 // UGS: fetch from GitHub repos (via selected CDN mirror)
-function loadUGS(){const repos=['tharun9772/ugs-1','tharun9772/ugs-2','tharun9772/ugs-3'];Promise.all(repos.map(repo=>fetch('https://api.github.com/repos/'+repo+'/contents/').then(r=>r.json()).then(d=>{const out=[];for(const f of d){if(f.type==='file'&&f.name.indexOf('cl')===0&&f.name.slice(-5)==='.html')out.push({name:f.name.replace(/^cl/,'').replace('.html',''),url:mirror('https://quantil.jsdelivr.net/gh/')+repo+'/'+f.name});}return out;}).catch(()=>[]))).then(parts=>{const seen={};ugsGames=[];for(const p of parts)for(const g of p){if(!seen[g.url]){seen[g.url]=true;ugsGames.push(g);}}ugsGames.sort((a,b)=>a.name.toLowerCase()<b.name.toLowerCase()?-1:1);if(currentServer==='ugs')loadCurrentServer();}).catch(e=>console.error('[ugs]',e));}
-// Cloud: load from cloud.json via stratus API or local
-function loadCloud(){
-fetch('cloud.json').then(r=>r.json()).then(data=>{
-cloudGames=data.map(g=>({name:g.name,img:g.image||g.cover,url:'',game_key:g.game_key,description:g.description,tags:g.tags}));
-if(currentServer==='cloud')loadCurrentServer();
-}).catch(e=>{
-// Fallback: use stratus cloud.json
-fetch('stratus-api-main/cloud.json').then(r=>r.json()).then(data=>{
-cloudGames=data.map(g=>({name:g.name,img:g.image||g.cover,url:'',game_key:g.game_key}));
-if(currentServer==='cloud')loadCurrentServer();
-}).catch(e2=>console.error('[cloud]',e2));
-});
-}
+function loadUGS(){const repos=['tharun9772/ugs-1','tharun9772/ugs-2','tharun9772/ugs-3'];Promise.all(repos.map(repo=>fetch('https://api.github.com/repos/'+repo+'/contents/').then(r=>r.json()).then(d=>{const out=[];for(const f of d){if(f.type==='file'&&f.name.indexOf('cl')===0&&f.name.slice(-5)==='.html')out.push({name:f.name.replace(/^cl/,'').replace('.html',''),url:mirror('https://quantil.jsdelivr.net/gh/')+repo+'/'+f.name});}return out;}).catch(()=>[]))).then(parts=>{const seen={};ugsGames=[];for(const p of parts)for(const g of p){if(!seen[g.url]){seen[g.url]=true;ugsGames.push(g);}}ugsGames.sort((a,b)=>a.name.toLowerCase()<b.name.toLowerCase()?-1:1);if(currentServer==='ugs'||currentServer==='all')loadCurrentServer();}).catch(e=>console.error('[ugs]',e));}
+// ClassroomSpot Cloud: featured playable web games
+const FEATURED_CLOUD=[
+{name:'Skate 3',img:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSoqSIBVoU_VcIqESH-owgL_2znWLS-VQJDtShiojA5Hg&s=10',url:'https://skate.aaddpp.lol/'},
+{name:'GTA 5',img:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQJYId5-CJy-4MJrNgi0GKFbss0pEmY1Nz6k3GNomigzg&s',url:'https://playgta5.net/start?mode=vi'},
+{name:'CS 1.6',img:'https://www.inxanitylabs.com/assets/games/thumbs/counter-strike.webp',url:''},
+{name:'The Simpsons: Hit and Run',img:'https://www.inxanitylabs.com/assets/games/thumbs/simpsons-hit-and-run.webp',url:'https://shar-wasm.cjoseph.workers.dev/?skipmovie'},
+{name:'GTA 3',img:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT_oFMmDjGDNsl9wavAQDexKlDZuUYCFVRw9GGDYrzdiTontqOSNXa7oDGwUA&usqp=CAI&s',url:'https://quenq.com/apps/iii-online/'},
+];
+function loadCloud(){cloudGames=FEATURED_CLOUD;if(currentServer==='cloud'||currentServer==='all')loadCurrentServer();}
 // Game search
-document.getElementById('gn-search').addEventListener('input',e=>{const q=e.target.value.toLowerCase();let list=[];if(currentServer==='gn')list=gnGames;else if(currentServer==='ugs')list=ugsGames;else if(currentServer==='cloud')list=cloudGames;else if(currentServer==='lumin')return;const filtered=list.filter(g=>g.name.toLowerCase().includes(q));renderGames(filtered);});
+document.getElementById('gn-search').addEventListener('input',e=>{const q=e.target.value.toLowerCase();let list=[];if(currentServer==='gn')list=gnGames;else if(currentServer==='ugs')list=ugsGames;else if(currentServer==='cloud')list=cloudGames;else if(currentServer==='all')list=allGames();else if(currentServer==='lumin')return;const filtered=list.filter(g=>g.name.toLowerCase().includes(q));renderGames(filtered);});
 document.getElementById('gn-player-close').addEventListener('click',()=>{document.getElementById('gn-player').hidden=true;document.getElementById('gn-player-frame').src='about:blank';});
 // ── Movies & TV (TMDB + rotating embed providers) ────────────────────────────
 const MV_KEYS=['15d2ea6d0dc1d476efbca3eba2b9bbfb','3fd2be6f0c70a2a598f084ddfb75487c','db55323b8d3e4154498498a75642b381'];
@@ -696,7 +746,12 @@ const MV_PROVIDERS=[
 {id:'vidcore',name:'VidCore',movie:i=>'https://vidcore.created.app/embed/movie/'+i,tv:(i,s,e)=>'https://vidcore.created.app/embed/tv/'+i+'/'+s+'/'+e},
 {id:'vidsrcpm',name:'VidSrc.pm',movie:i=>'https://vidsrc.pm/embed/movie/'+i,tv:(i,s,e)=>'https://vidsrc.pm/embed/tv/'+i+'/'+s+'/'+e},
 {id:'2embedskin',name:'2Embed.skin',movie:i=>'https://www.2embed.skin/embed/'+i,tv:(i,s,e)=>'https://www.2embed.skin/embedtv/'+i+'&s='+s+'&e='+e},
-{id:'atlantic',name:'Atlantic',movie:i=>'https://atlantic.st/embed/movie/'+i,tv:(i,s,e)=>'https://atlantic.st/embed/tv/'+i+'/'+s+'/'+e}];
+{id:'atlantic',name:'Atlantic',movie:i=>'https://atlantic.st/embed/movie/'+i,tv:(i,s,e)=>'https://atlantic.st/embed/tv/'+i+'/'+s+'/'+e},
+{id:'vidsrcxyz',name:'VidSrc.xyz',movie:i=>'https://vidsrc.xyz/embed/movie/'+i,tv:(i,s,e)=>'https://vidsrc.xyz/embed/tv/'+i+'/'+s+'/'+e},
+{id:'moviesapi',name:'MoviesAPI',movie:i=>'https://moviesapi.club/movie/'+i,tv:(i,s,e)=>'https://moviesapi.club/tv/'+i+'-'+s+'-'+e},
+{id:'smashy',name:'Smashy',movie:i=>'https://player.smashy.stream/movie/'+i,tv:(i,s,e)=>'https://player.smashy.stream/tv/'+i+'?s='+s+'&e='+e},
+{id:'vidjoy',name:'VidJoy',movie:i=>'https://vidjoy.pro/movie/'+i,tv:(i,s,e)=>'https://vidjoy.pro/tv/'+i+'/'+s+'/'+e},
+{id:'m111',name:'111Movies',movie:i=>'https://111movies.com/movie/'+i,tv:(i,s,e)=>'https://111movies.com/tv/'+i+'/'+s+'/'+e}];
 let mvProvIdx=Math.max(0,Math.min(MV_PROVIDERS.length-1,parseInt(localStorage.getItem('csp-mv-prov')||'0',10)||0));
 let mvCur=null;
 async function tmdb(path,params){
@@ -850,15 +905,6 @@ aiSend.disabled=false;
 }
 aiSend.addEventListener('click',aiAsk);
 aiText.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();aiAsk();}});
-// Groq key setting
-(function(){
-const inp=document.getElementById('groqKey');
-if(localStorage.getItem('groq_key'))inp.placeholder='key saved ✓';
-document.getElementById('saveGroq').addEventListener('click',()=>{
-const v=inp.value.trim();
-if(v){localStorage.setItem('groq_key',v);inp.value='';inp.placeholder='key saved ✓';}
-});
-})();
 // ── Music (SoundCloud + iTunes + Deezer fallback) ────────────────────────────
 const SC_CLIENT_IDS=['2t9loNQH90kzJcsFCODdigxfp325aq4z','iZIs9mchVcX5lhVRyQGGAYlNPVldzAoX'];
 class MusicAPI{
@@ -879,15 +925,19 @@ return tracks.map(t=>({stream:'sc',id:t.id,title:t.title||'Untitled',artist:(t.u
 return[];
 }
 async scStreamUrl(track){
-const cid=this._scId||SC_CLIENT_IDS[0];
 const list=track.transcodings||[];
 const pick=list.find(t=>t.format&&t.format.protocol==='progressive')||list[0];
 if(!pick)return null;
+const ids=[this._scId].concat(SC_CLIENT_IDS).filter(Boolean);
+for(const cid of ids){
 try{
 const res=await fetch(pick.url+'?client_id='+cid);
+if(!res.ok)continue;
 const data=await res.json();
-return data.url||null;
-}catch(e){return null;}
+if(data.url){this._scId=cid;return data.url;}
+}catch(e){}
+}
+return null;
 }
 async searchITunes(query){
 try{
