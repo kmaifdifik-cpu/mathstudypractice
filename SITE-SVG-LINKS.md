@@ -142,3 +142,146 @@ One file gets one URL per host per version. Versions below are every commit cont
 - https://gcore.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@main/site.svg
 - https://testingcf.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@main/site.svg
 - https://quantil.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@main/site.svg
+
+
+## Snapshot tags (immutable mirrors, newest last)
+
+### @svg-1
+- https://cdn.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-1/site.svg
+- https://fastly.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-1/site.svg
+- https://gcore.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-1/site.svg
+- https://testingcf.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-1/site.svg
+- https://quantil.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-1/site.svg
+
+### @svg-2
+- https://cdn.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-2/site.svg
+- https://fastly.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-2/site.svg
+- https://gcore.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-2/site.svg
+- https://testingcf.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-2/site.svg
+- https://quantil.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-2/site.svg
+
+### @svg-3
+- https://cdn.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-3/site.svg
+- https://fastly.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-3/site.svg
+- https://gcore.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-3/site.svg
+- https://testingcf.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-3/site.svg
+- https://quantil.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-3/site.svg
+
+### @svg-4
+- https://cdn.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-4/site.svg
+- https://fastly.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-4/site.svg
+- https://gcore.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-4/site.svg
+- https://testingcf.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-4/site.svg
+- https://quantil.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-4/site.svg
+
+### @svg-5
+- https://cdn.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-5/site.svg
+- https://fastly.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-5/site.svg
+- https://gcore.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-5/site.svg
+- https://testingcf.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-5/site.svg
+- https://quantil.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-5/site.svg
+
+### @svg-6
+- https://cdn.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-6/site.svg
+- https://fastly.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-6/site.svg
+- https://gcore.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-6/site.svg
+- https://testingcf.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-6/site.svg
+- https://quantil.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-6/site.svg
+
+### @svg-7
+- https://cdn.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-7/site.svg
+- https://fastly.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-7/site.svg
+- https://gcore.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-7/site.svg
+- https://testingcf.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-7/site.svg
+- https://quantil.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-7/site.svg
+
+### @svg-8
+- https://cdn.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-8/site.svg
+- https://fastly.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-8/site.svg
+- https://gcore.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-8/site.svg
+- https://testingcf.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-8/site.svg
+- https://quantil.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-8/site.svg
+
+### @svg-9
+- https://cdn.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-9/site.svg
+- https://fastly.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-9/site.svg
+- https://gcore.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-9/site.svg
+- https://testingcf.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-9/site.svg
+- https://quantil.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-9/site.svg
+
+### @svg-10
+- https://cdn.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-10/site.svg
+- https://fastly.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-10/site.svg
+- https://gcore.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-10/site.svg
+- https://testingcf.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-10/site.svg
+- https://quantil.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-10/site.svg
+
+### @svg-11
+- https://cdn.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-11/site.svg
+- https://fastly.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-11/site.svg
+- https://gcore.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-11/site.svg
+- https://testingcf.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-11/site.svg
+- https://quantil.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-11/site.svg
+
+### @svg-12
+- https://cdn.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-12/site.svg
+- https://fastly.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-12/site.svg
+- https://gcore.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-12/site.svg
+- https://testingcf.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-12/site.svg
+- https://quantil.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-12/site.svg
+
+### @svg-13
+- https://cdn.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-13/site.svg
+- https://fastly.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-13/site.svg
+- https://gcore.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-13/site.svg
+- https://testingcf.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-13/site.svg
+- https://quantil.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-13/site.svg
+
+### @svg-14
+- https://cdn.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-14/site.svg
+- https://fastly.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-14/site.svg
+- https://gcore.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-14/site.svg
+- https://testingcf.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-14/site.svg
+- https://quantil.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-14/site.svg
+
+### @svg-15
+- https://cdn.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-15/site.svg
+- https://fastly.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-15/site.svg
+- https://gcore.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-15/site.svg
+- https://testingcf.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-15/site.svg
+- https://quantil.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-15/site.svg
+
+### @svg-16
+- https://cdn.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-16/site.svg
+- https://fastly.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-16/site.svg
+- https://gcore.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-16/site.svg
+- https://testingcf.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-16/site.svg
+- https://quantil.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-16/site.svg
+
+### @svg-17
+- https://cdn.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-17/site.svg
+- https://fastly.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-17/site.svg
+- https://gcore.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-17/site.svg
+- https://testingcf.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-17/site.svg
+- https://quantil.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-17/site.svg
+
+### @svg-18
+- https://cdn.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-18/site.svg
+- https://fastly.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-18/site.svg
+- https://gcore.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-18/site.svg
+- https://testingcf.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-18/site.svg
+- https://quantil.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-18/site.svg
+
+### @svg-19
+- https://cdn.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-19/site.svg
+- https://fastly.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-19/site.svg
+- https://gcore.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-19/site.svg
+- https://testingcf.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-19/site.svg
+- https://quantil.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-19/site.svg
+
+### @svg-20
+- https://cdn.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-20/site.svg
+- https://fastly.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-20/site.svg
+- https://gcore.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-20/site.svg
+- https://testingcf.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-20/site.svg
+- https://quantil.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@svg-20/site.svg
