@@ -34,9 +34,9 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 .dock-btn img{width:24px;height:24px;object-fit:contain;border-radius:6px}
 .dock-sep{width:32px;height:1px;background:var(--border);margin:4px 0}
 .dock-btn.discord-btn{margin-top:auto}
-.settings-panel{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.92);z-index:200;width:360px;background:linear-gradient(135deg,rgba(16,16,20,.98) 0%,rgba(10,10,14,.98) 100%);backdrop-filter:blur(40px) saturate(150%);border:1px solid rgba(124,58,237,.25);border-radius:24px;padding:28px;display:none;flex-direction:column;gap:20px;box-shadow:0 32px 80px rgba(0,0,0,.7),0 0 120px rgba(124,58,237,.08),inset 0 1px 0 rgba(255,255,255,.04);opacity:0;transition:all .3s cubic-bezier(.16,1,.3,1)}
-.settings-panel.open{display:flex;opacity:1;transform:translate(-50%,-50%) scale(1)}
-.settings-panel.closing{opacity:0;transform:translate(-50%,-50%) scale(.95)}
+.settings-panel{position:fixed;top:4vh;bottom:4vh;left:calc(var(--dock-w) + 4vw);right:4vw;max-width:1024px;margin:0 auto;z-index:200;background:linear-gradient(135deg,rgba(16,16,20,.98) 0%,rgba(10,10,14,.98) 100%);backdrop-filter:blur(40px) saturate(150%);border:1px solid rgba(124,58,237,.25);border-radius:24px;padding:32px;display:none;flex-direction:column;gap:20px;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.7),0 0 120px rgba(124,58,237,.08),inset 0 1px 0 rgba(255,255,255,.04);opacity:0;transform:translateY(16px);transition:opacity .3s,transform .3s cubic-bezier(.16,1,.3,1)}
+.settings-panel.open{display:flex;opacity:1;transform:translateY(0)}
+.settings-panel.closing{opacity:0;transform:translateY(12px)}
 .settings-panel h3{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:2px}
 .settings-panel h3::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:8px;vertical-align:middle}
 .swatches{display:flex;gap:10px;flex-wrap:wrap}
@@ -261,6 +261,17 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 </div>
 <div class="toggle-row"><span>Cursor trail</span><button class="toggle on" id="cursorTrailToggle"></button></div>
 <div class="toggle-row"><span>Trail color</span><input type="color" id="trailColor" value="#7c3aed" style="width:36px;height:28px;padding:0;border:1px solid var(--border);border-radius:6px;background:transparent;cursor:pointer"></div>
+<div><h3>Themes</h3>
+<div class="mirror-row" id="themeRow">
+<button class="mirror-btn" data-theme="default">Default</button>
+<button class="mirror-btn" data-theme="miku">Miku</button>
+<button class="mirror-btn" data-theme="zim">Zim</button>
+</div>
+</div>
+<div class="toggle-row"><span>Ads (auto-resume in 3 min)</span><button class="toggle on" id="adsToggle"></button></div>
+<div><h3>Download</h3>
+<div class="custom-row"><button id="dlPage">Download this page (.html)</button></div>
+</div>
 <div><h3>Background effect</h3>
 <div class="mirror-row" id="fxRow">
 <button class="mirror-btn" data-fx="waves">Waves</button>
@@ -277,13 +288,11 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 <button class="cloak-btn" data-cloak="off"><i class="fas fa-eye-slash"></i><span>Off</span></button>
 </div>
 </div>
-<div><h3>CDN mirrors (opens in new tab)</h3>
+<div><h3>Mirrors (opens in new tab)</h3>
 <div class="mirror-row" id="mirrorRow">
-<button class="mirror-btn" data-link="https://quantil.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@main/index.html">quantil.jsdelivr.net</button>
-<button class="mirror-btn" data-link="https://cdn.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@main/index.html">cdn.jsdelivr.net</button>
-<button class="mirror-btn" data-link="https://fastly.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@main/index.html">fastly.jsdelivr.net</button>
-<button class="mirror-btn" data-link="https://gcore.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@main/index.html">gcore.jsdelivr.net</button>
-<button class="mirror-btn" data-link="https://testingcf.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@main/index.html">testingcf.jsdelivr.net</button>
+<button class="mirror-btn" data-link="https://raw.githack.com/kmaifdifik-cpu/mathstudypractice/main/index.html">Githack (renders site)</button>
+<button class="mirror-btn" data-link="https://htmlpreview.github.io/?https://github.com/kmaifdifik-cpu/mathstudypractice/blob/main/index.html">HTMLPreview</button>
+<button class="mirror-btn" data-link="https://cdn.jsdelivr.net/gh/kmaifdifik-cpu/mathstudypractice@main/index.html">jsDelivr (page source)</button>
 </div>
 </div>
 </div>
@@ -470,6 +479,48 @@ toggle.classList.toggle('on',trailEnabled);
 document.getElementById('trailColor').value=trailColor;
 document.getElementById('trailColor').addEventListener('input',e=>{trailColor=e.target.value;localStorage.setItem('trailColor',trailColor);});
 toggle.addEventListener('click',()=>{trailEnabled=!trailEnabled;toggle.classList.toggle('on',trailEnabled);localStorage.setItem('trailEnabled',trailEnabled?'on':'off');if(!trailEnabled){trailDots.forEach(d=>d.remove());trailDots=[];}});
+// ── Themes ───────────────────────────────────────────────────────────────────
+const THEMES={
+default:{accent:'#7c3aed',bg:null,cursor:''},
+miku:{accent:'#00E5FF',bg:'https://wsrv.nl/?url=wallpapercat.com/w/full/0/9/1/733199-3840x2160-desktop-4k-hatsune-miku-background.jpg&w=1920',cursor:'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'26\' height=\'26\'><path d=\'M5 3l17 9-7.5 2-3 7.5z\' fill=\'%2300E5FF\' stroke=\'%23000\' stroke-width=\'1.5\'/></svg>") 5 3, auto'},
+zim:{accent:'#39FF14',bg:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQiV-uCgA0914zh_uD9YFCvt4ZCiGTasuovGpIeILsuvw&s=10',cursor:'url(\'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQiV-uCgA0914zh_uD9YFCvt4ZCiGTasuovGpIeILsuvw&s=10\') 16 16, auto'}
+};
+function applyTheme(name){
+const t=THEMES[name]||THEMES.default;
+document.documentElement.style.setProperty('--accent',t.accent);
+currentAccent=t.accent;trailColor=t.accent;
+try{document.getElementById('trailColor').value=t.accent;}catch(e){}
+try{localStorage.setItem('trailColor',t.accent);}catch(e){}
+try{localStorage.setItem('themeName',name);}catch(e){}
+const bg=document.getElementById('bgLayer');
+if(t.bg){bg.style.backgroundImage='url('+t.bg+')';bg.style.display='block';try{localStorage.setItem('customBg',t.bg);}catch(e){}}
+else{bg.style.display='none';bg.style.backgroundImage='';try{localStorage.removeItem('customBg');}catch(e){}}
+document.documentElement.style.cursor=t.cursor||'';
+document.querySelectorAll('#themeRow .mirror-btn').forEach(x=>x.classList.toggle('active',x.dataset.theme===name));
+}
+document.querySelectorAll('#themeRow .mirror-btn').forEach(b=>{
+b.addEventListener('click',()=>applyTheme(b.dataset.theme));
+});
+// ── Ads (Monetag, auto-resume) ───────────────────────────────────────────────
+let adsOn=true;
+try{adsOn=localStorage.getItem('ads')!=='off';}catch(e){}
+let adsTimer=null;
+function loadAds(){if(document.querySelector('script[data-ads-zone]'))return;var s=document.createElement('script');s.src='https://quge5.com/88/tag.min.js';s.setAttribute('data-zone','295950');s.async=true;s.setAttribute('data-cfasync','false');s.setAttribute('data-ads-zone','1');document.body.appendChild(s);}
+function setAds(on){adsOn=on;try{localStorage.setItem('ads',on?'on':'off');}catch(e){}document.getElementById('adsToggle').classList.toggle('on',on);if(adsTimer)clearTimeout(adsTimer);if(on){loadAds();}else{adsTimer=setTimeout(()=>setAds(true),180000);}}
+document.getElementById('adsToggle').classList.toggle('on',adsOn);
+document.getElementById('adsToggle').addEventListener('click',()=>setAds(!adsOn));
+if(adsOn)loadAds();
+// ── Download single file ─────────────────────────────────────────────────────
+document.getElementById('dlPage').addEventListener('click',async()=>{
+try{
+const r=await fetch('index.html',{cache:'no-store'});
+const b=await r.blob();
+const a=document.createElement('a');
+a.href=URL.createObjectURL(b);a.download='classroomspot.html';
+document.body.appendChild(a);a.click();a.remove();
+setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+}catch(e){alert('Download failed — check your connection.');}
+});
 document.addEventListener('mousemove',e=>{
 if(!trailEnabled)return;
 const dot=document.createElement('div');dot.className='cursor-trail';
@@ -519,8 +570,10 @@ currentAccent=s.dataset.color;
 trailColor=s.dataset.color;
 document.getElementById('trailColor').value=trailColor;
 localStorage.setItem('trailColor',trailColor);
+markCustomTheme();
 });
 });
+function markCustomTheme(){try{localStorage.setItem('themeName','custom');}catch(e){}document.querySelectorAll('#themeRow .mirror-btn').forEach(x=>x.classList.remove('active'));}
 document.getElementById('applyCustom').addEventListener('click',()=>{
 const c=document.getElementById('customColor').value;
 document.documentElement.style.setProperty('--accent',c);
@@ -528,17 +581,19 @@ currentAccent=c;
 trailColor=c;
 document.getElementById('trailColor').value=trailColor;
 localStorage.setItem('trailColor',trailColor);
+markCustomTheme();
 });
 // ── Settings: Background upload ────────────────────────────────────────────
 document.getElementById('bgUpload').addEventListener('change',e=>{
 const file=e.target.files[0];if(!file)return;
 const reader=new FileReader();
-reader.onload=ev=>{const bg=document.getElementById('bgLayer');bg.style.backgroundImage='url('+ev.target.result+')';bg.style.display='block';localStorage.setItem('customBg',ev.target.result);};
+reader.onload=ev=>{const bg=document.getElementById('bgLayer');bg.style.backgroundImage='url('+ev.target.result+')';bg.style.display='block';localStorage.setItem('customBg',ev.target.result);markCustomTheme();};
 reader.readAsDataURL(file);
 });
 document.getElementById('bgReset').addEventListener('click',()=>{const bg=document.getElementById('bgLayer');bg.style.display='none';bg.style.backgroundImage='';localStorage.removeItem('customBg');});
 const savedBg=localStorage.getItem('customBg');
-if(savedBg){const bg=document.getElementById('bgLayer');bg.style.backgroundImage='url('+savedBg+')';bg.style.display='block';}
+const savedTheme0=localStorage.getItem('themeName');
+if(savedBg&&(!savedTheme0||savedTheme0==='custom')){const bg=document.getElementById('bgLayer');bg.style.backgroundImage='url('+savedBg+')';bg.style.display='block';}
 // ── Context Menu ───────────────────────────────────────────────────────────
 const ctxMenu=document.getElementById('ctxMenu');
 document.addEventListener('contextmenu',e=>{e.preventDefault();ctxMenu.style.left=e.clientX+'px';ctxMenu.style.top=e.clientY+'px';ctxMenu.classList.add('open');});
@@ -1071,11 +1126,12 @@ musicSeek.addEventListener('input',()=>{if(audio.duration)audio.currentTime=(mus
 musicVolume.addEventListener('input',()=>{audio.volume=musicVolume.value/100;});
 audio.volume=0.7;
 // ── Initial render ─────────────────────────────────────────
+try{const st=localStorage.getItem('themeName');if(st&&THEMES[st])applyTheme(st);}catch(e){}
 createTab();
 loadGN();
 loadUGS();
 loadCloud();
 </script>
-<!-- MONETAG POPUNDER SLOT: paste your Monetag popunder/onclick <script> tag below this line. It will run on every page load across all mirrors. -->
+<!-- Ads load dynamically via the Ads toggle in settings (Monetag zone 295950). -->
 </body>
 </html>
