@@ -637,7 +637,7 @@ frame.src='about:blank';
 document.getElementById('gn-player-title').textContent=name+' (link coming soon)';
 }
 function renderGames(list){const grid=document.getElementById('gn-grid');grid.innerHTML=list.map(renderGameCard).join('');document.getElementById('gn-count').textContent=list.length+' games';grid.querySelectorAll('.gn-card').forEach(card=>{card.addEventListener('click',()=>{openInPlayer(card.dataset.game,card.dataset.url,card.dataset.key);});});}
-function allGames(){const seen={};const out=[];for(const g of gnGames.concat(ugsGames,cloudGames,luminGames)){const k=(g.name||'').toLowerCase().replace(/[^a-z0-9]/g,'');if(k&&!seen[k]){seen[k]=true;out.push(g);}}return out;}
+function allGames(){const seen={};const out=[];for(const g of gnGames.concat(ugsGames,cloudGames,window.luminGames||[])){const k=(g.name||'').toLowerCase().replace(/[^a-z0-9]/g,'');if(k&&!seen[k]){seen[k]=true;out.push(g);}}return out;}
 function loadCurrentServer(){
 const grid=document.getElementById('gn-grid');
 const luminPanel=document.getElementById('lumin-panel');
@@ -696,7 +696,7 @@ try{clean(gamesEl);}catch(e){}
 }
 new MutationObserver(stripLuminPages).observe(document.getElementById('games'),{childList:true,subtree:true});
 // Scrape Lumin's rendered games so the All tab + counts include them
-let luminGames=[];
+window.luminGames=[];
 function scrapeLumin(){
 const gamesEl=document.getElementById('games');
 if(!gamesEl)return;
@@ -723,7 +723,7 @@ found.push({name:name,img:src||FALLBACK_IMG,url:(href&&href.indexOf('http')===0)
 try{root.querySelectorAll('*').forEach(el=>{if(el.shadowRoot)walk(el.shadowRoot);});}catch(e){}
 }
 try{walk(gamesEl);}catch(e){}
-luminGames=found;
+window.luminGames=found;
 if(currentServer==='lumin')document.getElementById('gn-count').textContent=found.length+' games';
 if(currentServer==='all')loadCurrentServer();
 }
