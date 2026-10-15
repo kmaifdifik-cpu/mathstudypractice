@@ -446,7 +446,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 <!-- CHAT -->
 <section class="page-view" id="view-chat">
 <div class="chat-wrap">
-<div class="chat-header"><h2>Chat</h2><p>Global chat, friends, DMs and calls</p></div>
+<div class="chat-header"><h2>Chat</h2><p>Global chat, friends, DMs and calls</p><p id="relayStatus" style="font-size:12px;color:var(--muted)"></p></div>
 <div id="chatAuth">
 <h2 id="chatAuthTitle">Log in</h2>
 <input type="text" id="authName" placeholder="Username" autocomplete="off">
@@ -1157,13 +1157,26 @@ async function chatBoot(){
 const msg=document.getElementById('authMsg');
 try{await loadNostr();}catch(e){if(msg)msg.textContent='Chat network failed to load. Check connection and reopen Chat.';return;}
 try{ownerNpub=localStorage.getItem('owner_npub')||'';}catch(e){ownerNpub='';}
-nPool=new Nostr.SimplePool();
+try{nPool=new Nostr.SimplePool();}catch(e){}
+setRelayStatus('connecting…');
+probeRelays();
 let skHex=null,name='';
 try{skHex=localStorage.getItem('nostr_sk');name=localStorage.getItem('nostr_name')||'';}catch(e){}
 if(skHex&&name){loginLocal(skHex,name);}
 }
+function setRelayStatus(t){const el=document.getElementById('relayStatus');if(el)el.textContent='relays: '+t;}
+async function probeRelays(){
+try{
+await Promise.race([
+nPool.querySync(NOSTR_RELAYS,{kinds:[1],'#t':[NOSTR_TAG],limit:1}),
+new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),9000))
+]);
+setRelayStatus('online ✓');
+}catch(e){setRelayStatus('unreachable — school Wi-Fi may block chat relays');}
+}
 function loginLocal(skHex,name){
 mySk=skHex;myPk=Nostr.getPublicKey(skBytes());fbName=name;
+if(!nPool){try{nPool=new Nostr.SimplePool();}catch(e){}}
 document.getElementById('chatAuthTitle').style.display='none';
 document.getElementById('authName').style.display='none';
 document.getElementById('authKey').style.display='none';
