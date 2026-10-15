@@ -322,8 +322,8 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 <button class="mirror-btn" data-fx="off">Off</button>
 </div>
 </div>
-<div><h3>Firebase (for Chat + Calls)</h3>
-<div class="custom-row"><input type="text" id="fbConfig" placeholder='Paste Firebase web config JSON...' style="flex:1;background:rgba(124,58,237,.08);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:9px 12px;font-size:12px;outline:none"><button id="saveFb">Save</button></div>
+<div><h3>Owner ID (chat crown + delete)</h3>
+<div class="custom-row"><input type="text" id="ownerNpub" placeholder="npub1... (your chat ID)" style="flex:1;background:rgba(124,58,237,.08);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:9px 12px;font-size:12px;outline:none"><button id="saveOwner">Save</button></div>
 </div>
 <div><h3>Tab cloak</h3>
 <div class="cloak-row">
@@ -450,10 +450,10 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 <div id="chatAuth">
 <h2 id="chatAuthTitle">Log in</h2>
 <input type="text" id="authName" placeholder="Username" autocomplete="off">
-<input type="password" id="authPass" placeholder="Password">
+<input type="text" id="authKey" placeholder="Secret key (only to log back in)" autocomplete="off">
 <div class="chat-auth-btns"><button id="authLogin">Log in</button><button id="authReg" class="ghost">Create account</button></div>
 <p id="authMsg"></p>
-<p id="authWhoRow">Logged in as <b id="authWho"></b> · <a href="#" id="authOut" style="color:var(--accent)">log out</a><br><span style="color:var(--muted);font-size:12px">Your ID: <code id="myUid" style="user-select:all"></code> <a href="#" id="copyUid" style="color:var(--accent)">copy</a> <span id="ownerBadge" style="display:none;color:var(--accent);font-weight:700">· 👑 OWNER</span></span></p>
+<p id="authWhoRow">Logged in as <b id="authWho"></b> · <a href="#" id="authOut" style="color:var(--accent)">log out</a><br><span style="color:var(--muted);font-size:12px">Your ID: <code id="myUid" style="user-select:all"></code> <a href="#" id="copyUid" style="color:var(--accent)">copy</a> <span id="ownerBadge" style="display:none;color:var(--accent);font-weight:700">· 👑 OWNER</span></span><br><span style="color:var(--muted);font-size:12px">Secret key: <code id="myKey" style="user-select:all"></code> <a href="#" id="copyKey" style="color:var(--accent)">copy</a> (save it to log in anywhere)</span></p>
 </div>
 <div id="chatMain" style="display:none">
 <div class="chat-tabs">
@@ -825,9 +825,14 @@ document.getElementById('gn-player').hidden=false;
 const frame=document.getElementById('gn-player-frame');
 // Stratus cloud games launch the WebRTC player
 if(key){frame.src='cloud.html?game='+encodeURIComponent(key);return;}
-if(url){frame.src=url;return;}
-frame.src='about:blank';
-document.getElementById('gn-player-title').textContent=name+' (link coming soon)';
+if(!url){frame.src='about:blank';document.getElementById('gn-player-title').textContent=name+' (link coming soon)';return;}
+// Fetch + inject so text/plain game files (jsDelivr) render as HTML instead of source
+fetch(url).then(r=>{if(!r.ok)throw new Error('fetch failed');return r.text();}).then(html=>{
+const base=String(url).replace(/[^/]*$/,'');
+if(!/<base\b/i.test(html))html=html.replace(/<head(.*?)>/i,'<head$1><base href="'+base+'">');
+try{const doc=frame.contentDocument||frame.contentWindow.document;doc.open();doc.write(html);doc.close();}
+catch(e){frame.src=url;}
+}).catch(()=>{try{frame.src=url;}catch(e){}});
 }
 function renderGames(list){const grid=document.getElementById('gn-grid');grid.innerHTML=list.map(renderGameCard).join('');document.getElementById('gn-count').textContent=list.length+' games';grid.querySelectorAll('.gn-card').forEach(card=>{card.addEventListener('click',()=>{openInPlayer(card.dataset.game,card.dataset.url,card.dataset.key);});});}
 function allGames(){const seen={};const out=[];for(const g of gnGames.concat(ugsGames,cloudGames,window.luminGames||[])){const k=(g.name||'').toLowerCase().replace(/[^a-z0-9]/g,'');if(k&&!seen[k]){seen[k]=true;out.push(g);}}return out;}
@@ -1083,194 +1088,274 @@ document.getElementById('mvServ').addEventListener('change',e=>mvUseProvider(par
 document.getElementById('mvNextSrv').addEventListener('click',()=>mvUseProvider(mvProvIdx+1));
 document.getElementById('mvEpGo').addEventListener('click',mvLoad);
 (function(){const sel=document.getElementById('mvServ');sel.innerHTML=MV_PROVIDERS.map((p,i)=>'<option value="'+i+'">'+p.name+'</option>').join('');sel.value=String(mvProvIdx);})();
-// ── Chat (Firebase: auth + global + friends + DMs + calls) ───────────────────
-let fbApp=null,fbAuth=null,fbDb=null,fbUser=null,fbName='',fbUnsubs=[];
-function fbConfig(){try{return JSON.parse(localStorage.getItem('fb_config')||'null');}catch(e){return null;}}
-function loadFirebase(){
-if(fbApp)return Promise.resolve(true);
-const cfg=fbConfig();
-if(!cfg)return Promise.reject(new Error('Paste your Firebase web config in Settings first.'));
-return new Promise((res,rej)=>{
-function add(src){return new Promise((rs,rj)=>{const s=document.createElement('script');s.src=src;s.onload=rs;s.onerror=()=>rj(new Error('load '+src));document.head.appendChild(s);});}
-add('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js')
-.then(()=>add('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js'))
-.then(()=>add('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js'))
-.then(()=>{fbApp=firebase.initializeApp(cfg);fbAuth=firebase.auth();fbDb=firebase.firestore();res(true);})
-.catch(rej);
-});
-}
-function chatMsg(m){fbAuth.onAuthStateChanged(u=>{const a=document.getElementById('authMsg');if(a){a.textContent=m;a.style.color='#f87171';}});}
-function fbClean(){fbUnsubs.forEach(u=>{try{u();}catch(e){}});fbUnsubs=[];}
-let ownerUids=[];
-async function refreshOwners(){
-try{
-const d=await fbDb.doc('roles/owners').get();
-ownerUids=(d.exists&&(d.data().uids||[]))||[];
-}catch(e){ownerUids=[];}
-const mine=fbUser&&ownerUids.includes(fbUser.uid);
-document.getElementById('ownerBadge').style.display=mine?'':'none';
-return mine;
-}
-async function claimOwner(){
-try{
-const ref=fbDb.doc('roles/owners');
-const d=await ref.get();
-if(!d.exists)await ref.set({uids:[fbUser.uid]});
-}catch(e){}
-await refreshOwners();
-}
+// ── Chat (Nostr: no backend, no Firebase — accounts + global + friends + calls) ─
+const NOSTR_RELAYS=['wss://relay.damus.io','wss://nos.lol','wss://relay.snort.social'];
+const NOSTR_TAG='classroomspot';
+let nPool=null,mySk=null,myPk='',fbName='',nSubs=[],ownerNpub='',deletedIds={};
 function escChat(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function validName(n){return /^[a-zA-Z0-9_]{3,16}$/.test(n);}
-async function chatBoot(){
-const msg=document.getElementById('authMsg');
-try{await loadFirebase();}catch(e){if(msg)msg.textContent=e.message;return;}
-fbAuth.onAuthStateChanged(async u=>{
-fbClean();
-fbUser=u;
-const authed=!!u;
-document.getElementById('chatAuthTitle').style.display=authed?'none':'';
-document.getElementById('authName').style.display=authed?'none':'';
-document.getElementById('authPass').style.display=authed?'none':'';
-document.getElementById('authLogin').style.display=authed?'none':'';
-document.getElementById('authReg').style.display=authed?'none':'';
-document.getElementById('authWhoRow').style.display=authed?'':'none';
-document.getElementById('chatMain').style.display=authed?'':'none';
-if(!u){fbName='';return;}
+function hexPk(s){
+s=String(s||'').trim();
+if(/^[0-9a-fA-F]{64}$/.test(s))return s.toLowerCase();
 try{
-const doc=await fbDb.collection('users').doc(u.uid).get();
-fbName=(doc.exists&&doc.data().name)||'anon';
-document.getElementById('authWho').textContent=fbName;
-document.getElementById('myUid').textContent=u.uid;
-await claimOwner();
-subGlobal();subFriends();subRequests();subIncoming();
-}catch(e){if(msg)msg.textContent='Profile error: '+e.message;}
+const d=Nostr.nip19.decode(s);
+if(d.type==='npub')return d.data;
+if(d.type==='nsec')return Nostr.getPublicKey(d.data);
+}catch(e){}
+return null;
+}
+function loadNostr(){
+if(window.Nostr)return Promise.resolve(true);
+return new Promise((res,rej)=>{
+function add(src){return new Promise((rs,rj)=>{const el=document.createElement('script');el.src=src;el.onload=rs;el.onerror=()=>rj(new Error('load '+src));document.head.appendChild(el);});}
+add('https://cdn.jsdelivr.net/npm/nostr-tools@2.7.2/lib/nostr.bundle.js').catch(()=>add('https://unpkg.com/nostr-tools@2.7.2/lib/nostr.bundle.js')).then(()=>{if(window.Nostr)res(true);else rej(new Error('Nostr library failed to load.'));}).catch(rej);
 });
 }
-function fakeEmail(name){return name.toLowerCase()+'@mathstudypractice.local';}
+function nFriends(){try{return JSON.parse(localStorage.getItem('nostr_friends')||'[]');}catch(e){return[];}}
+function nSaveFriends(l){try{localStorage.setItem('nostr_friends',JSON.stringify(l));}catch(e){}}
+function friendName(pk){const f=nFriends().find(x=>x.pk===pk);return f?f.name:null;}
+async function chatBoot(){
+const msg=document.getElementById('authMsg');
+try{await loadNostr();}catch(e){if(msg)msg.textContent='Chat network failed to load. Check connection and reopen Chat.';return;}
+try{ownerNpub=localStorage.getItem('owner_npub')||'';}catch(e){ownerNpub='';}
+nPool=new Nostr.SimplePool();
+let skHex=null,name='';
+try{skHex=localStorage.getItem('nostr_sk');name=localStorage.getItem('nostr_name')||'';}catch(e){}
+if(skHex&&name){loginLocal(skHex,name);}
+}
+function loginLocal(skHex,name){
+mySk=skHex;myPk=Nostr.getPublicKey(skBytes());fbName=name;
+document.getElementById('chatAuthTitle').style.display='none';
+document.getElementById('authName').style.display='none';
+document.getElementById('authKey').style.display='none';
+document.getElementById('authLogin').style.display='none';
+document.getElementById('authReg').style.display='none';
+document.getElementById('authWhoRow').style.display='';
+document.getElementById('chatMain').style.display='';
+document.getElementById('authWho').textContent=name;
+try{document.getElementById('myUid').textContent=Nostr.nip19.npubEncode(myPk);}catch(e){document.getElementById('myUid').textContent=myPk;}
+try{document.getElementById('myKey').textContent=Nostr.nip19.nsecEncode(skBytes());}catch(e){}
+refreshOwnerBadge();
+subGlobal();renderFriends();subDMs();subIncomingCalls();
+}
+function logoutLocal(){
+nSubs.forEach(u=>{try{u.close?u.close():u();}catch(e){}});nSubs=[];
+mySk=null;myPk='';fbName='';
+try{localStorage.removeItem('nostr_sk');localStorage.removeItem('nostr_name');}catch(e){}
+document.getElementById('chatAuthTitle').style.display='';
+document.getElementById('authName').style.display='';
+document.getElementById('authKey').style.display='';
+document.getElementById('authLogin').style.display='';
+document.getElementById('authReg').style.display='';
+document.getElementById('authWhoRow').style.display='none';
+document.getElementById('chatMain').style.display='none';
+}
+function refreshOwnerBadge(){
+const mine=ownerNpub&&myPk&&ownerNpub===myPk;
+document.getElementById('ownerBadge').style.display=mine?'':'none';
+}
 document.getElementById('authReg').addEventListener('click',async()=>{
 const name=document.getElementById('authName').value.trim();
-const pass=document.getElementById('authPass').value;
 const msg=document.getElementById('authMsg');
 if(!validName(name)){msg.textContent='Username: 3-16 letters, numbers or _';return;}
-if(pass.length<6){msg.textContent='Password (6+ chars) required.';return;}
 try{
-await loadFirebase();
-const key='usernames/'+name.toLowerCase();
-const taken=await fbDb.doc(key).get();
-if(taken.exists){msg.textContent='Username is taken.';return;}
-const cred=await fbAuth.createUserWithEmailAndPassword(fakeEmail(name),pass);
-await fbDb.doc(key).set({uid:cred.user.uid});
-await fbDb.collection('users').doc(cred.user.uid).set({name:name,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+await loadNostr();
+const sk=Nostr.generateSecretKey();
+const skHex=Array.from(sk).map(b=>b.toString(16).padStart(2,'0')).join('');
+try{localStorage.setItem('nostr_sk',skHex);localStorage.setItem('nostr_name',name);}catch(e){}
+if(!nPool)nPool=new Nostr.SimplePool();
+try{ownerNpub=localStorage.getItem('owner_npub')||'';}catch(e){}
+loginLocal(skHex,name);
 msg.textContent='';
 }catch(e){msg.textContent=e.message;}
 });
 document.getElementById('authLogin').addEventListener('click',async()=>{
-const name=document.getElementById('authName').value.trim();
-const pass=document.getElementById('authPass').value;
+const key=document.getElementById('authKey').value.trim();
 const msg=document.getElementById('authMsg');
-if(!name||!pass){msg.textContent='Enter your username and password.';return;}
-try{await loadFirebase();await fbAuth.signInWithEmailAndPassword(fakeEmail(name),pass);msg.textContent='';}catch(e){msg.textContent='Wrong username or password.';}
+if(!key){msg.textContent='Paste your secret key, or create a new account.';return;}
+try{
+await loadNostr();
+const pk=hexPk(key);
+if(!pk){msg.textContent='That key is not valid.';return;}
+let skHex=null;
+try{
+const d=Nostr.nip19.decode(key);
+if(d.type==='nsec')skHex=Array.from(d.data).map(b=>b.toString(16).padStart(2,'0')).join('');
+}catch(e){}
+if(!skHex){msg.textContent='Log in needs your SECRET key (starts with nsec), not your public ID.';return;}
+const name=(document.getElementById('authName').value.trim()||'anon');
+if(name&&!validName(name)){msg.textContent='Username: 3-16 letters, numbers or _';return;}
+try{localStorage.setItem('nostr_sk',skHex);localStorage.setItem('nostr_name',name||'anon');}catch(e){}
+if(!nPool)nPool=new Nostr.SimplePool();
+try{ownerNpub=localStorage.getItem('owner_npub')||'';}catch(e){}
+loginLocal(skHex,name||'anon');
+msg.textContent='';
+}catch(e){msg.textContent=e.message;}
 });
-document.getElementById('copyUid').addEventListener('click',e=>{e.preventDefault();const t=document.getElementById('myUid').textContent;try{navigator.clipboard.writeText(t);}catch(err){}});
-document.getElementById('authOut').addEventListener('click',e=>{e.preventDefault();if(fbAuth)fbAuth.signOut();});
-// Global chat
+document.getElementById('copyUid').addEventListener('click',e=>{e.preventDefault();try{navigator.clipboard.writeText(document.getElementById('myUid').textContent);}catch(err){}});
+document.getElementById('copyKey').addEventListener('click',e=>{e.preventDefault();try{navigator.clipboard.writeText(document.getElementById('myKey').textContent);}catch(err){}});
+document.getElementById('authOut').addEventListener('click',e=>{e.preventDefault();logoutLocal();});
+document.getElementById('saveOwner').addEventListener('click',()=>{
+const v=document.getElementById('ownerNpub').value.trim();
+try{localStorage.setItem('owner_npub',v);ownerNpub=v;}catch(e){ownerNpub=v;}
+refreshOwnerBadge();
+alert(v?'Owner ID saved.':'Owner ID cleared.');
+});
+function skBytes(){const h=mySk||'';const b=new Uint8Array(h.length/2);for(let i=0;i<b.length;i++)b[i]=parseInt(h.substr(i*2,2),16);return b;}
+// Global chat — kind 1 notes tagged for this site, live from public relays
+let globalCache=[];
+function renderGlobal(){
+const box=document.getElementById('globalMsgs');
+const items=globalCache.filter(m=>!deletedIds[m.id]).slice(-50);
+const iAmOwner=ownerNpub&&myPk&&ownerNpub===myPk;
+box.innerHTML=items.map(m=>{
+const isMe=m.pk===myPk;
+const nm=m.name||(friendName(m.pk)||(m.pk.slice(0,8)+'…'));
+const crown=(ownerNpub&&m.pk===ownerNpub)?'👑 ':'';
+return '<div class="msg'+(isMe?' me':'')+'"><div class="mn">'+crown+escChat(nm)+'</div><div class="mb">'+escChat(m.text)+'</div>'+(iAmOwner?'<div><button data-nostrdel="'+m.id+'" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;margin-top:2px">delete</button></div>':'')+'</div>';
+}).join('')||'<p style="color:var(--muted)">Say hi! 👋</p>';
+box.scrollTop=box.scrollHeight;
+box.querySelectorAll('[data-nostrdel]').forEach(b=>b.addEventListener('click',()=>nostrDelete(b.dataset.nostrdel)));
+}
 function subGlobal(){
 const box=document.getElementById('globalMsgs');
-box.innerHTML='<p style="color:var(--muted)">Loading...</p>';
-const un=fbDb.collection('global').orderBy('ts','desc').limit(50).onSnapshot(snap=>{
-const items=[];
-snap.forEach(d=>items.push({id:d.id,...d.data()}));
-items.reverse();
-const mine=fbUser&&ownerUids.includes(fbUser.uid);
-box.innerHTML=items.map(m=>'<div class="msg'+(m.uid===(fbUser&&fbUser.uid)?' me':'')+'"><div class="mn">'+(ownerUids.includes(m.uid)?'👑 ':'')+escChat(m.name)+'</div><div class="mb">'+escChat(m.text)+'</div>'+(mine?'<div><button data-del="'+m.id+'" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;margin-top:2px">delete</button></div>':'')+'</div>').join('')||'<p style="color:var(--muted)">Say hi! 👋</p>';
-box.scrollTop=box.scrollHeight;
-if(mine)box.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',async()=>{try{await fbDb.collection('global').doc(b.dataset.del).delete();}catch(e){}}));
+box.innerHTML='<p style="color:var(--muted)">Connecting to relays...</p>';
+try{
+const sub=nPool.subscribeMany(NOSTR_RELAYS,[{kinds:[1],'#t':[NOSTR_TAG],limit:50}],{
+onevent(ev){
+try{
+if(ev.kind!==1||!ev.content) return;
+const t=(ev.tags||[]).find(t=>t[0]==='t'&&t[1]===NOSTR_TAG);
+if(!t)return;
+let nm='';
+try{const nt=(ev.tags||[]).find(t=>t[0]==='name');if(nt)nm=nt[2]||nt[1]||'';}catch(e){}
+globalCache.push({id:ev.id,pk:ev.pubkey,name:nm,text:ev.content.slice(0,500),ts:ev.created_at});
+globalCache.sort((a,b)=>a.ts-b.ts);
+if(globalCache.length>200)globalCache=globalCache.slice(-200);
+renderGlobal();
+}catch(e){}
+}
 });
-fbUnsubs.push(un);
+nSubs.push(sub);
+}catch(e){box.innerHTML='<p style="color:#f87171">Relay connection failed. Reopen Chat to retry.</p>';}
 }
 async function sendGlobal(){
 const inp=document.getElementById('globalInput');
 const text=inp.value.trim();
-if(!text||!fbUser)return;
+if(!text||!mySk)return;
 inp.value='';
-await fbDb.collection('global').add({uid:fbUser.uid,name:fbName,text:text.slice(0,500),ts:firebase.firestore.FieldValue.serverTimestamp()});
+try{
+const ev=Nostr.finalizeEvent({kind:1,created_at:Math.floor(Date.now()/1000),tags:[['t',NOSTR_TAG],['name',fbName]],content:text.slice(0,500)},skBytes());
+await Promise.allSettled(nPool.publish(NOSTR_RELAYS,ev));
+globalCache.push({id:ev.id,pk:myPk,name:fbName,text:text.slice(0,500),ts:ev.created_at});
+globalCache.sort((a,b)=>a.ts-b.ts);
+renderGlobal();
+}catch(e){}
 }
 document.getElementById('globalSend').addEventListener('click',sendGlobal);
 document.getElementById('globalInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendGlobal();});
-// Friends
-function subFriends(){
+// Friends — stored locally, added by ID (npub or hex)
+function renderFriends(){
 const box=document.getElementById('friendList');
-const un=fbDb.collection('users').doc(fbUser.uid).collection('friends').onSnapshot(snap=>{
-const list=[];
-snap.forEach(d=>list.push({uid:d.id,name:d.data().name}));
-box.innerHTML=list.map(f=>'<div class="friend-row"><span class="fn">'+escChat(f.name)+'</span><button data-dm="'+f.uid+'" data-nm="'+escChat(f.name)+'">Message</button><button data-call="'+f.uid+'" data-nm="'+escChat(f.name)+'">Call</button><button data-vid="'+f.uid+'" data-nm="'+escChat(f.name)+'">Video</button></div>').join('')||'<p style="color:var(--muted)">No friends yet — add someone by username below.</p>';
+const list=nFriends();
+box.innerHTML=list.map(f=>'<div class="friend-row"><span class="fn">'+escChat(f.name)+'</span><button data-dm="'+f.pk+'" data-nm="'+escChat(f.name)+'">Message</button><button data-call="'+f.pk+'" data-nm="'+escChat(f.name)+'">Call</button><button data-vid="'+f.pk+'" data-nm="'+escChat(f.name)+'">Video</button><button data-unf="'+f.pk+'">✕</button></div>').join('')||'<p style="color:var(--muted)">No friends yet — add someone by their ID below.</p>';
 box.querySelectorAll('[data-dm]').forEach(b=>b.addEventListener('click',()=>openDM(b.dataset.dm,b.dataset.nm)));
 box.querySelectorAll('[data-call]').forEach(b=>b.addEventListener('click',()=>startCall(b.dataset.call,b.dataset.nm,false)));
 box.querySelectorAll('[data-vid]').forEach(b=>b.addEventListener('click',()=>startCall(b.dataset.call,b.dataset.nm,true)));
-});
-fbUnsubs.push(un);
+box.querySelectorAll('[data-unf]').forEach(b=>b.addEventListener('click',()=>{nSaveFriends(nFriends().filter(x=>x.pk!==b.dataset.unf));renderFriends();}));
 }
-document.getElementById('friendAddBtn').addEventListener('click',async()=>{
-const name=document.getElementById('friendAdd').value.trim();
-if(!name||!fbUser)return;
-try{
-const doc=await fbDb.doc('usernames/'+name.toLowerCase()).get();
-if(!doc.exists){alert('No user named '+name);return;}
-const toUid=doc.data().uid;
-if(toUid===fbUser.uid){alert("That's you!");return;}
-const fr=await fbDb.collection('users').doc(fbUser.uid).collection('friends').doc(toUid).get();
-if(fr.exists){alert('Already friends.');return;}
-await fbDb.collection('requests').add({from:fbUser.uid,fromName:fbName,toUid:toUid,status:'pending',ts:firebase.firestore.FieldValue.serverTimestamp()});
+function subFriends(){renderFriends();}
+document.getElementById('friendAddBtn').addEventListener('click',()=>{
+const raw=document.getElementById('friendAdd').value.trim();
+if(!raw||!mySk)return;
+const pk=hexPk(raw);
+if(!pk){alert('That is not a valid ID. Paste their npub (starts with npub1) or 64-char hex ID.');return;}
+if(pk===myPk){alert("That's you!");return;}
+const list=nFriends();
+if(list.some(x=>x.pk===pk)){alert('Already friends.');return;}
+const nm=prompt('Nickname for this friend:','friend')||'friend';
+list.push({pk:pk,name:String(nm).slice(0,24)});
+nSaveFriends(list);
 document.getElementById('friendAdd').value='';
-alert('Friend request sent to '+name);
-}catch(e){alert(e.message);}
+renderFriends();
 });
-// Requests
+// Requests — Nostr has no friend requests; friends are added directly by ID
 function subRequests(){
 const box=document.getElementById('reqList');
 const badge=document.getElementById('reqBadge');
-const un=fbDb.collection('requests').where('toUid','==',fbUser.uid).where('status','==','pending').onSnapshot(snap=>{
-const list=[];
-snap.forEach(d=>list.push({id:d.id,...d.data()}));
-badge.style.display=list.length?'':'none';
-badge.textContent=list.length;
-box.innerHTML=list.map(r=>'<div class="friend-row"><span class="fn">'+escChat(r.fromName)+' wants to be friends</span><button data-acc="'+r.id+'" data-f="'+r.from+'" data-nm="'+escChat(r.fromName)+'">Accept</button><button data-dec="'+r.id+'">Decline</button></div>').join('')||'<p style="color:var(--muted)">No pending requests.</p>';
-box.querySelectorAll('[data-acc]').forEach(b=>b.addEventListener('click',async()=>{
-const batch=fbDb.batch();
-batch.set(fbDb.collection('users').doc(fbUser.uid).collection('friends').doc(b.dataset.f),{name:b.dataset.nm});
-batch.set(fbDb.collection('users').doc(b.dataset.f).collection('friends').doc(fbUser.uid),{name:fbName});
-batch.update(fbDb.collection('requests').doc(b.dataset.acc),{status:'accepted'});
-await batch.commit();
-}));
-box.querySelectorAll('[data-dec]').forEach(b=>b.addEventListener('click',async()=>{
-await fbDb.collection('requests').doc(b.dataset.dec).update({status:'declined'});
-}));
-});
-fbUnsubs.push(un);
+badge.style.display='none';
+box.innerHTML='<p style="color:var(--muted)">No requests needed — add friends directly by their ID on the Friends tab.</p>';
 }
-// DMs
-let dmUid=null,dmUnsub=null,dmName='';
-function dmKey(a,b){return [a,b].sort().join('_');}
-function openDM(uid,name){
-dmUid=uid;dmName=name;
+// DMs — NIP-04 encrypted kind 4 messages
+let dmPk=null,dmName='';
+let dmCache=[];
+function renderDMs(){
+const box=document.getElementById('dmMsgs');
+box.innerHTML=dmCache.map(m=>'<div class="msg'+(m.pk===myPk?' me':'')+'"><div class="mn">'+escChat(m.name)+'</div><div class="mb">'+escChat(m.text)+'</div></div>').join('');
+box.scrollTop=box.scrollHeight;
+}
+function openDM(pk,name){
+dmPk=pk;dmName=name;
 document.getElementById('dmArea').style.display='';
 document.getElementById('dmTitle').textContent='Chat with '+name;
-const box=document.getElementById('dmMsgs');
-if(dmUnsub){try{dmUnsub();}catch(e){}}
-dmUnsub=fbDb.collection('dms').doc(dmKey(fbUser.uid,uid)).collection('messages').orderBy('ts','asc').limit(100).onSnapshot(snap=>{
-const items=[];
-snap.forEach(d=>items.push(d.data()));
-box.innerHTML=items.map(m=>'<div class="msg'+(m.uid===fbUser.uid?' me':'')+'"><div class="mn">'+escChat(m.name)+'</div><div class="mb">'+escChat(m.text)+'</div></div>').join('');
-box.scrollTop=box.scrollHeight;
-});
 }
 async function sendDM(){
-if(!dmUid||!fbUser)return;
+if(!dmPk||!mySk)return;
 const inp=document.getElementById('dmInput');
 const text=inp.value.trim();
 if(!text)return;
 inp.value='';
-await fbDb.collection('dms').doc(dmKey(fbUser.uid,dmUid)).collection('messages').add({uid:fbUser.uid,name:fbName,text:text.slice(0,500),ts:firebase.firestore.FieldValue.serverTimestamp()});
+try{
+const ct=await Nostr.nip04.encrypt(skBytes(),dmPk,text.slice(0,500));
+const ev=Nostr.finalizeEvent({kind:4,created_at:Math.floor(Date.now()/1000),tags:[['p',dmPk]],content:ct},skBytes());
+await Promise.allSettled(nPool.publish(NOSTR_RELAYS,ev));
+dmCache.push({pk:myPk,name:fbName,text:text.slice(0,500),ts:ev.created_at});
+dmCache.sort((a,b)=>a.ts-b.ts);
+if(dmCache.length>200)dmCache=dmCache.slice(-200);
+renderDMs();
+}catch(e){}
+}
+function subDMs(){
+try{
+const sub=nPool.subscribeMany(NOSTR_RELAYS,[{kinds:[4],'#p':[myPk],limit:100}],{
+async onevent(ev){
+try{
+if(ev.kind!==4)return;
+// Call signaling rides the DM channel as JSON
+if(ev.pubkey&&dmPk&&ev.pubkey===dmPk){
+try{
+const maybe=await Nostr.nip04.decrypt(skBytes(),ev.pubkey,ev.content);
+const sig=JSON.parse(maybe);
+if(sig&&sig.app==='cs-call'){onSignal(ev.pubkey,sig);return;}
+}catch(e){}
+}
+// Owner delete broadcasts
+if(ev.pubkey&&ownerNpub&&ev.pubkey===ownerNpub){
+try{
+const maybe=await Nostr.nip04.decrypt(skBytes(),ev.pubkey,ev.content);
+const sig=JSON.parse(maybe);
+if(sig&&sig.app==='cs-del'&&sig.id){deletedIds[sig.id]=true;renderGlobal();renderDMs();return;}
+}catch(e){}
+}
+const peer=ev.pubkey;
+let text='';
+try{text=await Nostr.nip04.decrypt(skBytes(),peer,ev.content);}catch(e){return;}
+let obj=null;
+try{obj=JSON.parse(text);}catch(e){}
+if(obj&&obj.app==='cs-call'){onSignal(peer,obj);return;}
+if(obj&&obj.app==='cs-del'&&obj.id){deletedIds[obj.id]=true;renderGlobal();renderDMs();return;}
+const nm=(peer===myPk)?fbName:(friendName(peer)||(peer.slice(0,8)+'…'));
+if(!dmPk||peer===dmPk||peer===myPk){
+dmCache.push({pk:peer,name:nm,text:String(text).slice(0,500),ts:ev.created_at});
+dmCache.sort((a,b)=>a.ts-b.ts);
+if(dmCache.length>200)dmCache=dmCache.slice(-200);
+renderDMs();
+}
+}catch(e){}
+}
+});
+nSubs.push(sub);
+}catch(e){}
 }
 document.getElementById('dmSend').addEventListener('click',sendDM);
 document.getElementById('dmInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendDM();});
@@ -1283,9 +1368,16 @@ t.classList.add('active');
 document.getElementById('cpanel-'+t.dataset.cpanel).classList.add('active');
 });
 });
-// ── Calls (WebRTC voice/video, Firestore signaling) ──────────────────────────
+// ── Calls (WebRTC voice/video, Nostr DM signaling) ─────────────────────────────
 const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}]};
-let pc=null,localStream=null,curCall=null,callUnsubs=[],muted=false;
+let pc=null,localStream=null,curCall=null,muted=false;
+async function nSend(peer,obj){
+try{
+const ct=await Nostr.nip04.encrypt(skBytes(),peer,JSON.stringify(obj));
+const ev=Nostr.finalizeEvent({kind:4,created_at:Math.floor(Date.now()/1000),tags:[['p',peer]],content:ct},skBytes());
+await Promise.allSettled(nPool.publish(NOSTR_RELAYS,ev));
+}catch(e){}
+}
 function callUI(mode,title,accept){
 document.getElementById('callTitle').textContent=title;
 document.getElementById('callOverlay').hidden=false;
@@ -1300,7 +1392,6 @@ try{if(pc)pc.close();}catch(e){}
 pc=null;curCall=null;
 try{if(localStream)localStream.getTracks().forEach(t=>t.stop());}catch(e){}
 localStream=null;
-callUnsubs.forEach(u=>{try{u();}catch(e){}});callUnsubs=[];
 document.getElementById('callOverlay').hidden=true;
 document.getElementById('callRemote').srcObject=null;
 document.getElementById('callLocal').srcObject=null;
@@ -1310,105 +1401,97 @@ localStream=await navigator.mediaDevices.getUserMedia({audio:true,video:video?{w
 document.getElementById('callLocal').srcObject=localStream;
 return localStream;
 }
-function newPC(callRef,isCaller){
+function newPC(){
 pc=new RTCPeerConnection(ICE);
 localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
 pc.ontrack=e=>{document.getElementById('callRemote').srcObject=e.streams[0];};
 pc.onicecandidate=e=>{
-if(e.candidate)callRef.update({[(isCaller?'callerCands':'calleeCands')]:firebase.firestore.FieldValue.arrayUnion(e.candidate.toJSON())}).catch(()=>{});
+if(e.candidate&&curCall)nSend(curCall.peer,{app:'cs-call',type:'candidate',callId:curCall.id,cand:e.candidate.toJSON()});
 };
 return pc;
 }
-function watchCands(callRef,field){
-let seen=0;
-const un=callRef.onSnapshot(d=>{
-const arr=(d.data()&&d.data()[field])||[];
-for(let i=seen;i<arr.length;i++){try{pc.addIceCandidate(new RTCIceCandidate(arr[i]));}catch(e){}}
-seen=arr.length;
-});
-callUnsubs.push(un);
-}
-async function startCall(toUid,toName,video){
+async function startCall(peerPk,peerName,video){
 try{
-await loadFirebase();
-if(!fbUser){alert('Log in to chat first.');return;}
+if(!mySk){alert('Log in to chat first.');return;}
 await media(video);
-const callRef=fbDb.collection('calls').doc();
-curCall={id:callRef.id,video:video};
-newPC(callRef,true);
+const callId=Math.random().toString(36).slice(2)+Date.now().toString(36);
+curCall={id:callId,peer:peerPk,video:video};
+newPC();
 const offer=await pc.createOffer();
 await pc.setLocalDescription(offer);
-await callRef.set({from:fbUser.uid,fromName:fbName,to:toUid,status:'ringing',video:video,offer:{type:offer.type,sdp:offer.sdp},callerCands:[],calleeCands:[],ts:firebase.firestore.FieldValue.serverTimestamp()});
-callUI(video?'video':'voice','Calling '+toName+'...',false);
-watchCands(callRef,'calleeCands');
-const un=callRef.onSnapshot(async d=>{
-const data=d.data();
-if(!data)return;
-if(data.answer&&!pc.remoteDescription){
-try{await pc.setRemoteDescription(new RTCSessionDescription(data.answer));}catch(e){}
+callUI(video?'video':'voice','Calling '+peerName+'...',false);
+await nSend(peerPk,{app:'cs-call',type:'ring',callId:callId,video:video,fromName:fbName});
+await nSend(peerPk,{app:'cs-call',type:'offer',callId:callId,sdp:offer.sdp});
+}catch(e){alert('Call failed: '+e.message);endCallUI();}
 }
-if(data.status==='declined'){alert(toName+' declined.');await endCallUI();}
-if(data.status==='ended'){await endCallUI();}
-});
-callUnsubs.push(un);
-}catch(e){alert('Call failed: '+e.message);await endCallUI();}
+const pendingOffers={};
+async function handleOffer(peer,obj){
+await pc.setRemoteDescription(new RTCSessionDescription({type:'offer',sdp:obj.sdp}));
+const ans=await pc.createAnswer();
+await pc.setLocalDescription(ans);
+await nSend(peer,{app:'cs-call',type:'answer',callId:obj.callId,sdp:ans.sdp});
 }
-function subIncoming(){
-const un=fbDb.collection('calls').where('to','==',fbUser.uid).where('status','==','ringing').onSnapshot(snap=>{
-snap.docChanges().forEach(async ch=>{
-if(ch.type!=='added')return;
-const id=ch.doc.id,data=ch.doc.data();
+async function onSignal(peer,obj){
+if(!obj||obj.app!=='cs-call')return;
+if(obj.type==='ring'){
 if(curCall)return;
-curCall={id:id,video:!!data.video};
-callUI(data.video?'video':'voice','Incoming call from '+data.fromName,true);
-const callRef=fbDb.collection('calls').doc(id);
+curCall={id:obj.callId,peer:peer,video:!!obj.video};
+callUI(obj.video?'video':'voice','Incoming call from '+(obj.fromName||'friend'),true);
 document.getElementById('callAccept').onclick=async()=>{
 document.getElementById('callAccept').style.display='none';
 document.getElementById('callDecline').style.display='none';
 document.getElementById('callEnd').style.display='';
+document.getElementById('callDecline').onclick=()=>{};
 try{
-await media(!!data.video);
-newPC(callRef,false);
-await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-const ans=await pc.createAnswer();
-await pc.setLocalDescription(ans);
-await callRef.update({status:'active',answer:{type:ans.type,sdp:ans.sdp}});
-watchCands(callRef,'callerCands');
-const un2=callRef.onSnapshot(async d2=>{
-if(d2.data()&&d2.data().status==='ended')await endCallUI();
-});
-callUnsubs.push(un2);
-}catch(e){alert('Could not answer: '+e.message);await endCallUI();}
+await media(!!curCall.video);
+newPC();
+await nSend(peer,{app:'cs-call',type:'accepted',callId:curCall.id});
+if(pendingOffers[curCall.id]){const off=pendingOffers[curCall.id];delete pendingOffers[curCall.id];await handleOffer(peer,off);}
+}catch(e){alert('Could not answer: '+e.message);endCallUI();}
 };
 document.getElementById('callDecline').onclick=async()=>{
-await callRef.update({status:'declined'});
+await nSend(peer,{app:'cs-call',type:'decline',callId:obj.callId});
 curCall=null;
 document.getElementById('callOverlay').hidden=true;
 };
-});
-});
-fbUnsubs.push(un);
+return;
 }
+if(!curCall||obj.callId!==curCall.id)return;
+try{
+if(obj.type==='offer'){
+if(pc)await handleOffer(peer,obj);
+else pendingOffers[obj.callId]=obj;
+}else if(obj.type==='answer'){
+if(!pc.remoteDescription)await pc.setRemoteDescription(new RTCSessionDescription({type:'answer',sdp:obj.sdp}));
+}else if(obj.type==='accepted'){
+// Callee is ready; our offer was already sent at ring time
+}else if(obj.type==='candidate'){
+if(obj.cand)await pc.addIceCandidate(new RTCIceCandidate(obj.cand));
+}else if(obj.type==='decline'){
+alert('Call declined.');
+endCallUI();
+}else if(obj.type==='end'){
+endCallUI();
+}
+}catch(e){}
+}
+function subIncomingCalls(){}
 document.getElementById('callEnd').addEventListener('click',async()=>{
-if(curCall){try{await fbDb.collection('calls').doc(curCall.id).update({status:'ended'});}catch(e){}}
-await endCallUI();
+if(curCall)await nSend(curCall.peer,{app:'cs-call',type:'end',callId:curCall.id});
+endCallUI();
+});
+let muted=false;
+document.getElementById('callMute').addEventListener('click',e=>{
+muted=!muted;
+if(localStream)localStream.getAudioTracks().forEach(t=>{t.enabled=!muted;});
+e.target.textContent=muted?'Unmute':'Mute';
 });
 document.getElementById('callMute').addEventListener('click',e=>{
 muted=!muted;
 if(localStream)localStream.getAudioTracks().forEach(t=>{t.enabled=!muted;});
 e.target.textContent=muted?'Unmute':'Mute';
 });
-// Firebase config save
-document.getElementById('saveFb').addEventListener('click',()=>{
-const v=document.getElementById('fbConfig').value.trim();
-if(!v)return;
-try{
-const cfg=JSON.parse(v);
-if(!cfg.apiKey||!cfg.projectId){alert('That does not look like a Firebase web config (needs apiKey + projectId).');return;}
-localStorage.setItem('fb_config',JSON.stringify(cfg));
-alert('Saved! Open the Chat tab to log in.');
-}catch(e){alert('Invalid JSON — paste the exact config object from Firebase console.');}
-});
+// ── ClassroomSpot AI (Groq + Puter + Pollinations) ─────────────────────────────
 const GROQ_KEY=localStorage.getItem('groq_key')||'';
 const GROQ_MODEL='llama-3.3-70b-versatile';
 const aiMsgs=document.getElementById('aiMsgs');
