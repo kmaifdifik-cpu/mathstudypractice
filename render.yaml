@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: classroomspot-bare
+    env: node
+    plan: free
+    buildCommand: npm install || true
+    startCommand: node bare-server.js
+    healthCheckPath: /v1/

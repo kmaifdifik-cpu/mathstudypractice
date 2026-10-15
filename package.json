@@ -1,0 +1,13 @@
+{
+  "name": "classroomspot-bare",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bare v3 server for ClassroomSpot cloud proxy",
+  "main": "bare-server.js",
+  "scripts": {
+    "start": "node bare-server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

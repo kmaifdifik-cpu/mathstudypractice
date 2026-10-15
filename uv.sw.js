@@ -125,9 +125,25 @@ class UVServiceWorker extends EventEmitter {
 
             if (reqEvent.intercepted) return reqEvent.returnValue;
 
-            const response = await fetch(requestCtx.send);
+            const response = await (async () => {
+                // Try each bare server in turn — a dead one fails fast and we
+                // move to the next instead of failing the whole request.
+                let last = null;
+                for (let attempt = 0; attempt < worker.addresses.length; attempt++) {
+                    if (attempt > 0) requestCtx.address = worker.address;
+                    try {
+                        const r = await fetch(requestCtx.send);
+                        if (r.headers.get('x-bare-status')) return r;
+                        last = r;
+                    } catch (e) {
+                        last = null;
+                    }
+                }
+                if (last) return last;
+                throw new Error('all bare servers unreachable');
+            })();
 
-            if (response.status === 500) {
+            if (response.status === 500 && !response.headers.get('x-bare-status')) {
                 return Promise.reject('');
             };
 
@@ -812,5 +828,5 @@ const __uv_sw = new UVServiceWorker();
 self.addEventListener('fetch', (event) => {
     event.respondWith(
         __uv_sw.fetch(event).catch((err) => new Response(String((err && err.stack) || err), { status: 500 }))
-    ));
+    );
 });
