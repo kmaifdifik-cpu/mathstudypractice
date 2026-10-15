@@ -262,14 +262,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 </div>
 <div class="toggle-row"><span>Cursor trail</span><button class="toggle on" id="cursorTrailToggle"></button></div>
 <div class="toggle-row"><span>Trail color</span><input type="color" id="trailColor" value="#7c3aed" style="width:36px;height:28px;padding:0;border:1px solid var(--border);border-radius:6px;background:transparent;cursor:pointer"></div>
-<div><h3>Themes</h3>
-<div class="mirror-row" id="themeRow">
-<button class="mirror-btn" data-theme="default">Default</button>
-<button class="mirror-btn" data-theme="miku">Miku</button>
-<button class="mirror-btn" data-theme="zim">Zim</button>
-</div>
-</div>
-<div class="toggle-row"><span>Ads (auto-resume in 3 min)</span><button class="toggle on" id="adsToggle"></button></div>
+<div class="toggle-row"><span>Ads (off until you reopen the site)</span><button class="toggle on" id="adsToggle"></button></div>
 <div><h3>Download</h3>
 <div class="custom-row"><button id="dlPage">Download this page (.html)</button></div>
 </div>
@@ -505,16 +498,13 @@ b.addEventListener('click',()=>applyTheme(b.dataset.theme));
 // ── Ads (Monetag, auto-resume) ───────────────────────────────────────────────
 // ── Ads (Monetag, session-only: fresh visit always starts ON) ──────────────────
 let adsOn=true;
-let adsTimer=null;
 function loadAds(){if(document.querySelector('script[data-ads-zone]'))return;var s=document.createElement('script');s.src='https://quge5.com/88/tag.min.js';s.setAttribute('data-zone','295950');s.async=true;s.setAttribute('data-cfasync','false');s.setAttribute('data-ads-zone','1');document.body.appendChild(s);}
-function adsRemaining(){try{const t=parseInt(sessionStorage.getItem('adsOffUntil')||'0',10);return Math.max(0,t-Date.now());}catch(e){return 0;}}
 function setAds(on){
 adsOn=on;
 document.getElementById('adsToggle').classList.toggle('on',on);
-if(adsTimer)clearTimeout(adsTimer);
-if(on){try{sessionStorage.removeItem('adsOffUntil');}catch(e){}loadAds();}
+if(on){try{sessionStorage.removeItem('adsOff');}catch(e){}loadAds();}
 else{
-try{sessionStorage.setItem('adsOffUntil',String(Date.now()+180000));}catch(e){}
+try{sessionStorage.setItem('adsOff','1');}catch(e){}
 // Reload guarantees the ad tag never runs this session, so OFF is total
 location.reload();
 }
@@ -525,16 +515,10 @@ if(confirm('If you turn off ads it won\'t help us earn money for a VPS and links
 }else{setAds(true);}
 });
 (function(){
-const left=adsRemaining();
-if(left>0){
-adsOn=false;
-document.getElementById('adsToggle').classList.remove('on');
-adsTimer=setTimeout(()=>setAds(true),left);
-}else{
-adsOn=true;
-document.getElementById('adsToggle').classList.add('on');
-loadAds();
-}
+let off=false;
+try{off=sessionStorage.getItem('adsOff')==='1';}catch(e){}
+if(off){adsOn=false;document.getElementById('adsToggle').classList.remove('on');}
+else{adsOn=true;document.getElementById('adsToggle').classList.add('on');loadAds();}
 })();
 // ── Download single file ─────────────────────────────────────────────────────
 document.getElementById('dlPage').addEventListener('click',async()=>{
@@ -875,22 +859,11 @@ const MV_KEYS=['15d2ea6d0dc1d476efbca3eba2b9bbfb','3fd2be6f0c70a2a598f084ddfb754
 const MV_IMG='https://image.tmdb.org/t/p/w342';
 const MV_PROVIDERS=[
 {id:'vidlink',name:'VidLink',movie:i=>'https://vidlink.pro/movie/'+i,tv:(i,s,e)=>'https://vidlink.pro/tv/'+i+'/'+s+'/'+e},
-{id:'vidfast',name:'VidFast',movie:i=>'https://vidfast.pro/movie/'+i,tv:(i,s,e)=>'https://vidfast.pro/tv/'+i+'/'+s+'/'+e},
-{id:'vidsrcto',name:'VidSrc.to',movie:i=>'https://vidsrc.to/embed/movie/'+i,tv:(i,s,e)=>'https://vidsrc.to/embed/tv/'+i+'/'+s+'/'+e},
-{id:'vidsrccc',name:'VidSrc.cc',movie:i=>'https://vidsrc.cc/v2/embed/movie/'+i,tv:(i,s,e)=>'https://vidsrc.cc/v2/embed/tv/'+i+'/'+s+'/'+e},
-{id:'2embedcc',name:'2Embed',movie:i=>'https://www.2embed.cc/embed/'+i,tv:(i,s,e)=>'https://www.2embed.cc/embedtv/'+i+'&s='+s+'&e='+e},
-{id:'superembed',name:'SuperEmbed',movie:i=>'https://multiembed.mov/?video_id='+i+'&tmdb=1',tv:(i,s,e)=>'https://multiembed.mov/?video_id='+i+'&tmdb=1&s='+s+'&e='+e},
-{id:'vidcore',name:'VidCore',movie:i=>'https://vidcore.created.app/embed/movie/'+i,tv:(i,s,e)=>'https://vidcore.created.app/embed/tv/'+i+'/'+s+'/'+e},
 {id:'vidsrcpm',name:'VidSrc.pm',movie:i=>'https://vidsrc.pm/embed/movie/'+i,tv:(i,s,e)=>'https://vidsrc.pm/embed/tv/'+i+'/'+s+'/'+e},
-{id:'2embedskin',name:'2Embed.skin',movie:i=>'https://www.2embed.skin/embed/'+i,tv:(i,s,e)=>'https://www.2embed.skin/embedtv/'+i+'&s='+s+'&e='+e},
 {id:'atlantic',name:'Atlantic',movie:i=>'https://atlantic.st/embed/movie/'+i,tv:(i,s,e)=>'https://atlantic.st/embed/tv/'+i+'/'+s+'/'+e},
-{id:'vidsrcxyz',name:'VidSrc.xyz',movie:i=>'https://vidsrc.xyz/embed/movie/'+i,tv:(i,s,e)=>'https://vidsrc.xyz/embed/tv/'+i+'/'+s+'/'+e},
-{id:'moviesapi',name:'MoviesAPI',movie:i=>'https://moviesapi.club/movie/'+i,tv:(i,s,e)=>'https://moviesapi.club/tv/'+i+'-'+s+'-'+e},
-{id:'smashy',name:'Smashy',movie:i=>'https://player.smashy.stream/movie/'+i,tv:(i,s,e)=>'https://player.smashy.stream/tv/'+i+'?s='+s+'&e='+e},
-{id:'vidjoy',name:'VidJoy',movie:i=>'https://vidjoy.pro/movie/'+i,tv:(i,s,e)=>'https://vidjoy.pro/tv/'+i+'/'+s+'/'+e},
-{id:'m111',name:'111Movies',movie:i=>'https://111movies.com/movie/'+i,tv:(i,s,e)=>'https://111movies.com/tv/'+i+'/'+s+'/'+e},
-{id:'vidbinge',name:'VidBinge',movie:i=>'https://vidbinge.com/movie/'+i,tv:(i,s,e)=>'https://vidbinge.com/tv/'+i+'/'+s+'/'+e},
-{id:'vidsrcin',name:'VidSrc.in',movie:i=>'https://vidsrc.in/embed/movie/'+i,tv:(i,s,e)=>'https://vidsrc.in/embed/tv/'+i+'/'+s+'/'+e}];
+{id:'vidfastvc',name:'VidFast.vc',movie:i=>'https://vidfast.vc/movie/'+i,tv:(i,s,e)=>'https://vidfast.vc/tv/'+i+'/'+s+'/'+e},
+{id:'vidfastpro',name:'VidFast.pro',movie:i=>'https://vidfast.pro/movie/'+i,tv:(i,s,e)=>'https://vidfast.pro/tv/'+i+'/'+s+'/'+e},
+{id:'vidking',name:'VidKing',movie:i=>'https://vidking.net/embed/movie/'+i,tv:(i,s,e)=>'https://vidking.net/embed/tv/'+i+'/'+s+'/'+e}];
 let mvProvIdx=Math.max(0,Math.min(MV_PROVIDERS.length-1,parseInt(localStorage.getItem('csp-mv-prov')||'0',10)||0));
 let mvCur=null;
 async function tmdb(path,params){
@@ -1171,7 +1144,6 @@ musicSeek.addEventListener('input',()=>{if(audio.duration)audio.currentTime=(mus
 musicVolume.addEventListener('input',()=>{audio.volume=musicVolume.value/100;});
 audio.volume=0.7;
 // ── Initial render ─────────────────────────────────────────
-try{const st=localStorage.getItem('themeName');if(st&&THEMES[st])applyTheme(st);}catch(e){}
 createTab();
 loadGN();
 loadUGS();
