@@ -310,6 +310,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 <div class="toggle-row"><span>Cursor trail</span><button class="toggle on" id="cursorTrailToggle"></button></div>
 <div class="toggle-row"><span>Trail color</span><input type="color" id="trailColor" value="#7c3aed" style="width:36px;height:28px;padding:0;border:1px solid var(--border);border-radius:6px;background:transparent;cursor:pointer"></div>
 <div class="toggle-row"><span>Ads (off until refresh)</span><button class="toggle on" id="adsToggle"></button></div>
+<p id="adsNote" style="display:none;font-size:12px;color:var(--muted)">Ads are off — no earnings for the VPS and links while off. They return on refresh.</p>
 <div><h3>Download</h3>
 <div class="custom-row"><button id="dlPage">Download this page (.html)</button></div>
 </div>
@@ -605,9 +606,8 @@ if(s)s.remove();
 }
 }
 document.getElementById('adsToggle').addEventListener('click',()=>{
-if(adsOn){
-if(confirm('If you turn off ads it won\'t help us earn money for a VPS and links. Turn ads off for 3 minutes?'))setAds(false);
-}else{setAds(true);}
+if(adsOn){setAds(false);document.getElementById('adsNote').style.display='';}
+else{setAds(true);document.getElementById('adsNote').style.display='none';}
 });
 (function(){
 adsOn=true;
