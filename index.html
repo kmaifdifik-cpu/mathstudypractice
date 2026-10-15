@@ -490,6 +490,13 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 <button onclick="document.getElementById('bgUpload').click()"><i class="fas fa-image"></i> Change background</button>
 </div>
 <script>
+// ── XML/SVG document shim: create HTML-namespace elements so dataset works ────
+try{
+if(document.createElement('div').dataset===undefined){
+var __ce=document.createElement.bind(document);
+document.createElement=function(t){return document.createElementNS('http://www.w3.org/1999/xhtml',t);};
+}
+}catch(e){}
 // ── Purple Wave Background ─────────────────────────────────────────────────
 const waveCanvas=document.getElementById('waveCanvas');
 const waveCtx=waveCanvas.getContext('2d');
