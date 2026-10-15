@@ -1480,7 +1480,6 @@ document.getElementById('callEnd').addEventListener('click',async()=>{
 if(curCall)await nSend(curCall.peer,{app:'cs-call',type:'end',callId:curCall.id});
 endCallUI();
 });
-let muted=false;
 document.getElementById('callMute').addEventListener('click',e=>{
 muted=!muted;
 if(localStream)localStream.getAudioTracks().forEach(t=>{t.enabled=!muted;});
