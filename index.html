@@ -626,19 +626,46 @@ adsOn=on;
 document.getElementById('adsToggle').classList.toggle('on',on);
 if(on){setFramePopups(true);loadAds();}
 else{
-const s=document.querySelector('script[data-ads-zone]');
-if(s)s.remove();
-setFramePopups(false);
+// One-shot flag: survives THIS reload only, so the tag never runs this visit.
+// Any later refresh/reopen finds no flag and ads come back on.
+try{sessionStorage.setItem('adsJustOff','1');}catch(e){}
+location.reload();
 }
 }
+// While ads are off: stop the whole tab from being dragged to an ad page.
+// Our own links all open new tabs, so this can only ever trigger on ad redirects.
+window.addEventListener('beforeunload',e=>{
+if(!adsOn){e.preventDefault();e.returnValue='';}
+});
+// While ads are off: kill injected auto-redirect meta tags.
+new MutationObserver(()=>{
+if(adsOn)return;
+document.querySelectorAll('meta[http-equiv="refresh" i]').forEach(m=>m.remove());
+}).observe(document.documentElement,{childList:true,subtree:true});
+// While ads are off: stop programmatic form submits aimed at new tabs.
+// Real typing+Enter submits are trusted events and pass through untouched.
+window.addEventListener('submit',e=>{
+if(adsOn||e.isTrusted)return;
+const t=(e.target&&e.target.getAttribute&&e.target.getAttribute('target'))||'';
+if(t==='_blank'||t==='_new'){e.preventDefault();e.stopPropagation();}
+},true);
 document.getElementById('adsToggle').addEventListener('click',()=>{
 if(adsOn){setAds(false);document.getElementById('adsNote').style.display='';}
 else{setAds(true);document.getElementById('adsNote').style.display='none';}
 });
 (function(){
+let justOff=false;
+try{justOff=sessionStorage.getItem('adsJustOff')==='1';sessionStorage.removeItem('adsJustOff');}catch(e){}
+if(justOff){
+adsOn=false;
+document.getElementById('adsToggle').classList.remove('on');
+document.getElementById('adsNote').style.display='';
+setFramePopups(false);
+}else{
 adsOn=true;
 document.getElementById('adsToggle').classList.add('on');
 // Tag loads on first user gesture (so turning ads off beforehand fully prevents it)
+}
 })();
 // ── Download single file ─────────────────────────────────────────────────────
 document.getElementById('dlPage').addEventListener('click',async()=>{
