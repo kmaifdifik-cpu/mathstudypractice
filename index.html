@@ -459,7 +459,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 <div class="chat-tabs">
 <button class="chat-tab active" data-cpanel="global">Global</button>
 <button class="chat-tab" data-cpanel="friends">Friends</button>
-<button class="chat-tab" data-cpanel="reqs">Requests<span id="reqBadge"></span></button>
+<button class="chat-tab" data-cpanel="reqs">Mods<span id="reqBadge"></span></button>
 </div>
 <div class="cpanel active" id="cpanel-global">
 <div class="chat-box"><div id="globalMsgs"></div><div class="chat-send"><input id="globalInput" placeholder="Message everyone..." autocomplete="off"><button id="globalSend">Send</button></div></div>
@@ -1188,7 +1188,9 @@ document.getElementById('authWho').textContent=name;
 try{document.getElementById('myUid').textContent=Nostr.nip19.npubEncode(myPk);}catch(e){document.getElementById('myUid').textContent=myPk;}
 try{document.getElementById('myKey').textContent=Nostr.nip19.nsecEncode(skBytes());}catch(e){}
 refreshOwnerBadge();
-subGlobal();renderFriends();subDMs();subIncomingCalls();
+subGlobal();renderFriends();subDMs();subIncomingCalls();subRequests();
+fetchModList();
+if(!window.__modTimer)window.__modTimer=setInterval(()=>{if(mySk)fetchModList();},120000);
 }
 function logoutLocal(){
 nSubs.forEach(u=>{try{u.close?u.close():u();}catch(e){}});nSubs=[];
@@ -1202,9 +1204,32 @@ document.getElementById('authReg').style.display='';
 document.getElementById('authWhoRow').style.display='none';
 document.getElementById('chatMain').style.display='none';
 }
+async function nostrDelete(eventId){
+if(!mySk)return;
+deletedIds[eventId]=true;
+renderGlobal();
+try{
+const ev=Nostr.finalizeEvent({kind:5,created_at:Math.floor(Date.now()/1000),tags:[['e',eventId]],content:'deleted by owner'},skBytes());
+await Promise.allSettled(nPool.publish(NOSTR_RELAYS,ev));
+await nSendBroadcast(eventId);
+}catch(e){}
+}
+async function nSendBroadcast(eventId){
+try{
+const subs=nFriends();
+for(const f of subs){
+try{
+const ct=await Nostr.nip04.encrypt(skBytes(),f.pk,JSON.stringify({app:'cs-del',id:eventId}));
+const ev=Nostr.finalizeEvent({kind:4,created_at:Math.floor(Date.now()/1000),tags:[['p',f.pk]],content:ct},skBytes());
+await Promise.allSettled(nPool.publish(NOSTR_RELAYS,ev));
+}catch(e){}
+}
+}catch(e){}
+}
 function refreshOwnerBadge(){
-const mine=ownerNpub&&myPk&&ownerNpub===myPk;
+const mine=ownerId()&&myPk&&ownerId()===myPk;
 document.getElementById('ownerBadge').style.display=mine?'':'none';
+return mine;
 }
 document.getElementById('authReg').addEventListener('click',async()=>{
 const name=document.getElementById('authName').value.trim();
@@ -1254,20 +1279,94 @@ refreshOwnerBadge();
 alert(v?'Owner ID saved.':'Owner ID cleared.');
 });
 function skBytes(){const h=mySk||'';const b=new Uint8Array(h.length/2);for(let i=0;i<b.length;i++)b[i]=parseInt(h.substr(i*2,2),16);return b;}
+const MOD_D='classroomspot-modlist-v1';
+const OWNER_DEFAULT='';
+function ownerId(){try{return localStorage.getItem('owner_npub')||OWNER_DEFAULT||'';}catch(e){return OWNER_DEFAULT||'';}}
+let modList={bans:{},mutes:{}};
+function modActive(map,pk){
+const until=map[pk];
+if(until===undefined||until===null)return 0;
+if(until==='forever')return Infinity;
+const t=Number(until);
+if(!t||t<=Date.now())return 0;
+return t;
+}
+function fmtUntil(t){
+if(t===Infinity)return 'permanently';
+const s=Math.max(0,Math.round((t-Date.now())/1000));
+if(s>=86400)return Math.round(s/86400)+'d left';
+if(s>=3600)return Math.round(s/3600)+'h left';
+return Math.round(s/60)+'m left';
+}
+async function fetchModList(){
+const owner=ownerId();
+if(!owner)return;
+try{
+const evs=await Promise.race([
+nPool.querySync(NOSTR_RELAYS,{kinds:[30000],'#d':[MOD_D],limit:10}),
+new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),9000))
+]);
+let best=null;
+(evs||[]).forEach(ev=>{if(ev&&ev.pubkey===owner&&(!best||ev.created_at>best.created_at))best=ev;});
+if(best){
+try{
+const data=JSON.parse(best.content);
+if(data&&(data.bans||data.mutes))modList={bans:data.bans||{},mutes:data.mutes||{}};
+}catch(e){}
+}
+}catch(e){}
+renderGlobal();
+}
+async function publishModList(){
+try{
+const ev=Nostr.finalizeEvent({kind:30000,created_at:Math.floor(Date.now()/1000),tags:[['d',MOD_D]],content:JSON.stringify(modList)},skBytes());
+await Promise.allSettled(nPool.publish(NOSTR_RELAYS,ev));
+}catch(e){}
+}
+async function modAction(pk,action){
+if(!mySk||!ownerId()||myPk!==ownerId())return;
+if(action==='ban')modList.bans[pk]='forever';
+else if(action==='kick')modList.bans[pk]=Date.now()+86400000;
+else if(action==='timeout')modList.mutes[pk]=Date.now()+600000;
+else if(action==='unban'){delete modList.bans[pk];delete modList.mutes[pk];}
+await publishModList();
+renderGlobal();renderBans();
+}
+function renderBans(){
+const box=document.getElementById('reqList');
+const badge=document.getElementById('reqBadge');
+badge.style.display='none';
+const isOwner=myPk&&ownerId()&&myPk===ownerId();
+if(!isOwner){box.innerHTML='<p style="color:var(--muted)">No requests needed — add friends directly by their ID on the Friends tab.</p>';return;}
+const rows=[];
+Object.keys(modList.bans||{}).forEach(pk=>{rows.push({pk:pk,label:'banned '+fmtUntil(modActive(modList.bans,pk))});});
+Object.keys(modList.mutes||{}).forEach(pk=>{if(!modList.bans[pk])rows.push({pk:pk,label:'muted '+fmtUntil(modActive(modList.mutes,pk))});});
+box.innerHTML='<h4 style="margin-bottom:10px">Moderation (owner only)</h4>'+(rows.map(r=>'<div class="friend-row"><span class="fn" style="font-size:12px;word-break:break-all">'+escChat(r.pk.slice(0,16))+'… — '+escChat(r.label)+'</span><button data-unban="'+r.pk+'">Unban</button></div>').join('')||'<p style="color:var(--muted)">Nobody banned or muted.</p>');
+box.querySelectorAll('[data-unban]').forEach(b=>b.addEventListener('click',()=>modAction(b.dataset.unban,'unban')));
+}
 // Global chat — kind 1 notes tagged for this site, live from public relays
 let globalCache=[];
 function renderGlobal(){
 const box=document.getElementById('globalMsgs');
-const items=globalCache.filter(m=>!deletedIds[m.id]).slice(-50);
-const iAmOwner=ownerNpub&&myPk&&ownerNpub===myPk;
+const now=Date.now();
+const items=globalCache.filter(m=>{
+if(deletedIds[m.id])return false;
+if(modActive(modList.bans,m.pk))return false;
+if(modActive(modList.mutes,m.pk))return false;
+return true;
+}).slice(-50);
+const iAmOwner=ownerId()&&myPk&&ownerId()===myPk;
 box.innerHTML=items.map(m=>{
 const isMe=m.pk===myPk;
 const nm=m.name||(friendName(m.pk)||(m.pk.slice(0,8)+'…'));
-const crown=(ownerNpub&&m.pk===ownerNpub)?'👑 ':'';
-return '<div class="msg'+(isMe?' me':'')+'"><div class="mn">'+crown+escChat(nm)+'</div><div class="mb">'+escChat(m.text)+'</div>'+(iAmOwner?'<div><button data-nostrdel="'+m.id+'" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;margin-top:2px">delete</button></div>':'')+'</div>';
+const crown=(ownerId()&&m.pk===ownerId())?'👑 ':'';
+const idline='<div style="font-size:10px;color:var(--muted);opacity:.75;word-break:break-all">'+escChat(m.pk.slice(0,16))+'…</div>';
+const modBtns=iAmOwner&&!isMe?'<div><button data-nmod="ban:'+m.pk+'" style="background:none;border:none;color:#f87171;font-size:11px;cursor:pointer">ban</button> <button data-nmod="kick:'+m.pk+'" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer">kick 1d</button> <button data-nmod="timeout:'+m.pk+'" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer">timeout 10m</button> <button data-nostrdel="'+m.id+'" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer">delete</button></div>':(iAmOwner?'<div><button data-nostrdel="'+m.id+'" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;margin-top:2px">delete</button></div>':'');
+return '<div class="msg'+(isMe?' me':'')+'"><div class="mn">'+crown+escChat(nm)+'</div>'+idline+'<div class="mb">'+escChat(m.text)+'</div>'+modBtns+'</div>';
 }).join('')||'<p style="color:var(--muted)">Say hi! 👋</p>';
 box.scrollTop=box.scrollHeight;
 box.querySelectorAll('[data-nostrdel]').forEach(b=>b.addEventListener('click',()=>nostrDelete(b.dataset.nostrdel)));
+box.querySelectorAll('[data-nmod]').forEach(b=>b.addEventListener('click',()=>{const parts=b.dataset.nmod.split(':');modAction(parts[1],parts[0]);}));
 }
 function subGlobal(){
 const box=document.getElementById('globalMsgs');
@@ -1296,6 +1395,9 @@ async function sendGlobal(){
 const inp=document.getElementById('globalInput');
 const text=inp.value.trim();
 if(!text||!mySk)return;
+const bT=modActive(modList.bans,myPk),mT=modActive(modList.mutes,myPk);
+if(bT){alert('You are banned from global chat '+fmtUntil(bT)+'.');return;}
+if(mT){alert('You are timed out '+fmtUntil(mT)+'.');return;}
 inp.value='';
 try{
 const ev=Nostr.finalizeEvent({kind:1,created_at:Math.floor(Date.now()/1000),tags:[['t',NOSTR_TAG],['name',fbName]],content:text.slice(0,500)},skBytes());
@@ -1332,13 +1434,8 @@ nSaveFriends(list);
 document.getElementById('friendAdd').value='';
 renderFriends();
 });
-// Requests — Nostr has no friend requests; friends are added directly by ID
-function subRequests(){
-const box=document.getElementById('reqList');
-const badge=document.getElementById('reqBadge');
-badge.style.display='none';
-box.innerHTML='<p style="color:var(--muted)">No requests needed — add friends directly by their ID on the Friends tab.</p>';
-}
+// Mods tab — owner ban/mute list (everyone else sees a note)
+function subRequests(){renderBans();}
 // DMs — NIP-04 encrypted kind 4 messages
 let dmPk=null,dmName='';
 let dmCache=[];
