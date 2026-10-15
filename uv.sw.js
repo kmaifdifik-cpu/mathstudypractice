@@ -787,3 +787,11 @@ function eventTargetAgnosticAddListener(emitter, name, listener, flags) {
     throw new TypeError('The "emitter" argument must be of type EventEmitter. Received type ' + typeof emitter);
   }
 }
+
+// ── ClassroomSpot: instantiate the worker and actually handle fetches ────────
+const __uv_sw = new UVServiceWorker();
+self.addEventListener('fetch', (event) => {
+    event.respondWith(
+        __uv_sw.fetch(event).catch((err) => new Response(String((err && err.stack) || err), { status: 500 }))
+    ));
+});

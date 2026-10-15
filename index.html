@@ -7,6 +7,7 @@
 <title>ClassroomSpot OS v19</title>
 <link rel="icon" href="https://quantil.jsdelivr.net/gh/s0n-1m-cr1n3/sc13nc3@latest/assets/img/classroom2.png">
 <script src="https://cdn.jsdelivr.net/gh/luminsdk/script@latest/lumin.min.js"></script>
+<script src="https://js.puter.com/v2/"></script>
 <script src="uv.bundle.js"></script>
 <script src="uv.config.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
@@ -887,7 +888,9 @@ const MV_PROVIDERS=[
 {id:'moviesapi',name:'MoviesAPI',movie:i=>'https://moviesapi.club/movie/'+i,tv:(i,s,e)=>'https://moviesapi.club/tv/'+i+'-'+s+'-'+e},
 {id:'smashy',name:'Smashy',movie:i=>'https://player.smashy.stream/movie/'+i,tv:(i,s,e)=>'https://player.smashy.stream/tv/'+i+'?s='+s+'&e='+e},
 {id:'vidjoy',name:'VidJoy',movie:i=>'https://vidjoy.pro/movie/'+i,tv:(i,s,e)=>'https://vidjoy.pro/tv/'+i+'/'+s+'/'+e},
-{id:'m111',name:'111Movies',movie:i=>'https://111movies.com/movie/'+i,tv:(i,s,e)=>'https://111movies.com/tv/'+i+'/'+s+'/'+e}];
+{id:'m111',name:'111Movies',movie:i=>'https://111movies.com/movie/'+i,tv:(i,s,e)=>'https://111movies.com/tv/'+i+'/'+s+'/'+e},
+{id:'vidbinge',name:'VidBinge',movie:i=>'https://vidbinge.com/movie/'+i,tv:(i,s,e)=>'https://vidbinge.com/tv/'+i+'/'+s+'/'+e},
+{id:'vidsrcin',name:'VidSrc.in',movie:i=>'https://vidsrc.in/embed/movie/'+i,tv:(i,s,e)=>'https://vidsrc.in/embed/tv/'+i+'/'+s+'/'+e}];
 let mvProvIdx=Math.max(0,Math.min(MV_PROVIDERS.length-1,parseInt(localStorage.getItem('csp-mv-prov')||'0',10)||0));
 let mvCur=null;
 async function tmdb(path,params){
@@ -1025,6 +1028,14 @@ reply=(data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].m
 }
 if(!reply){
 try{
+if(typeof puter!=='undefined'&&puter.ai){
+const pr=await puter.ai.chat([{role:'system',content:'You are ClassroomSpot AI, a helpful homework assistant. Keep answers clear and concise.'},{role:'user',content:q}],{model:'gpt-4o-mini'});
+reply=(pr&&pr.message&&pr.message.content)||(typeof pr==='string'?pr:null);
+}
+}catch(e){err=e;}
+}
+if(!reply){
+try{
 const hist=aiHistory.filter(m=>m.role!=='system').map(m=>(m.role==='user'?'User: ':'Assistant: ')+m.content).join('\n');
 const res2=await fetch('https://text.pollinations.ai/'+encodeURIComponent('You are ClassroomSpot AI, a helpful homework assistant. Keep answers clear and concise.\n'+hist));
 if(!res2.ok)throw new Error('HTTP '+res2.status);
@@ -1075,6 +1086,13 @@ if(data.url){this._scId=cid;return data.url;}
 }
 return null;
 }
+async searchAudius(query){
+try{
+const res=await fetch('https://discoveryprovider.audius.co/v1/tracks/search?query='+encodeURIComponent(query)+'&app_name=CLASSROOMSPOT&limit=15');
+const data=await res.json();
+return (data.data||[]).map(t=>({stream:'audius',id:t.id,title:t.title||'Untitled',artist:(t.user&&t.user.name)||'Unknown',artwork:((t.artwork||{})['480x480']||(t.artwork||{})['150x150']||''),previewUrl:'https://discoveryprovider.audius.co/v1/tracks/'+t.id+'/stream?app_name=CLASSROOMSPOT',duration:t.duration||0}));
+}catch(e){return[];}
+}
 async searchITunes(query){
 try{
 const res=await fetch('https://itunes.apple.com/search?term='+encodeURIComponent(query)+'&media=music&entity=song&limit=15');
@@ -1092,6 +1110,8 @@ return (data.data||[]).map(t=>({stream:'direct',title:t.title,artist:t.artist.na
 async search(query){
 const sc=await this.searchSoundCloud(query);
 if(sc&&sc.length)return sc;
+const au=await this.searchAudius(query);
+if(au&&au.length)return au;
 const it=await this.searchITunes(query);
 if(it&&it.length)return it;
 return this.searchDeezer(query);
