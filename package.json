@@ -1,13 +1,21 @@
 {
-  "name": "classroomspot-bare",
+  "name": "classroomspot-proxy",
   "version": "1.0.0",
-  "private": true,
-  "description": "Bare v3 server for ClassroomSpot cloud proxy",
-  "main": "bare-server.js",
-  "scripts": {
-    "start": "node bare-server.js"
-  },
+  "type": "module",
   "engines": {
-    "node": ">=18"
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@nebula-services/bare-server-node": "^2.0.4",
+    "chalk": "^5.4.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mime": "^4.0.6",
+    "node-fetch": "^3.3.2"
   }
 }

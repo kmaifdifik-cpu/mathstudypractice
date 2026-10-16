@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KSHBZ8D1X7"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-KSHBZ8D1X7');
+</script>
+    <script>
+        // Check if about:blank is enabled and if we're not already in an about:blank page
+        if (localStorage.getItem('aboutBlank') === 'true' && window.location.href !== 'about:blank') {
+            const win = window.open();
+            win.document.body.style.margin = '0';
+            win.document.body.style.height = '100vh';
+            const iframe = win.document.createElement('iframe');
+            iframe.style.border = 'none';
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            iframe.style.margin = '0';
+            iframe.src = window.location.href;
+            win.document.body.appendChild(iframe);
+            window.location.replace('about:blank');
+        }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google</title>
+    <link rel="icon" href="/assets/favicon/google.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/settings.css">
+    <link rel="stylesheet" href="assets/css/dropdown.css">
+    <script src="assets/js/panic.js"></script>
+    <script src="assets/js/background.js"></script>
+    <script src="assets/js/theme-loader.js"></script>
+    <script src="assets/js/background-elements.js"></script>
+    <script src="assets/js/particles-loader.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+      <a href="/" class="nav-logo">Updaown's UBL</a>
+      <div class="nav-links">
+        <a href="/" class="nav-link">Home</a>
+        <!-- Primary navigation items above, secondary items in dropdown below -->
+        <div class="dropdown-menu">
+          <button class="hamburger-btn">
+            <span class="hamburger-icon"></span>
+            <span class="hamburger-icon"></span>
+            <span class="hamburger-icon"></span>
+          </button>
+          <div class="dropdown-content">
+            <a href="/rx" class="dropdown-link">Tabs</a>
+            <a href="/vk" class="dropdown-link">Settings</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+    
+    <div class="container">
+        <div id="account-status" style="text-align: center; margin-bottom: 20px; display: none;">
+            <div style="background: rgba(30, 30, 30, 0.8); padding: 15px; border-radius: 10px; display: inline-flex; align-items: center; gap: 15px;">
+                <div id="user-info" style="text-align: left;">
+                    <div id="username" style="font-weight: bold; font-size: 18px;"></div>
+                    <a href="account.html" style="color: var(--accent-color, #7289da); text-decoration: none; font-size: 14px;">View Account</a>
+                </div>
+            </div>
+        </div>
+        <div class="settings-grid">
+            <!-- About:Blank Section -->
+            <div class="settings-section">
+                <div class="setting-header">
+                    <h2>About:Blank</h2>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="aboutBlankToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <p class="setting-description">Cloak the site in an about:blank page and toggle about:blank on startup (enabled by default)</p>
+                <button class="secondary-button" id="openPopup">Open Popup</button>
+            </div>
+
+            <!-- Set Panic Key -->
+            <div class="settings-section">
+                <h2>Set Panic Key</h2>
+                <p class="setting-description">Press any key to set it as your panic key. This key will redirect you to Google when pressed.</p>
+                <div class="input-group">
+                    <input type="text" id="panicKey" placeholder="Click here and press a key" readonly>
+                </div>
+                <input type="text" id="panicUrl" placeholder="https://www.google.com/">
+                <button class="secondary-button" id="savePanicKey">Save</button>
+                <button class="secondary-button" id="resetPanicKey">Reset</button>
+            </div>
+
+            <!-- Key Recording Modal -->
+            <div id="keyRecordingModal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <h3>Recording Key Combination</h3>
+                    <p>Press the key(s) you want to use. Press Enter to save or Escape to cancel.</p>
+                    <div id="recordedKeys">No keys recorded yet...</div>
+                </div>
+            </div>
+
+            <!-- Tab Cloaker -->
+            <div class="settings-section">
+                <h2>Tab Cloaker</h2>
+                <p class="setting-description">Change the title and icon of the page.</p>
+                <select id="cloakPreset" class="input-group">
+                    <option value="default">Default (No Cloak)</option>
+                    <option value="google">Google</option>
+                    <option value="drive">Google Drive</option>
+                    <option value="classroom">Google Classroom</option>
+                    <option value="canvas">Canvas</option>
+                </select>
+                <div class="button-group">
+                    <button class="secondary-button" id="saveCloak">Save</button>
+                    <button class="secondary-button" id="resetCloak">Reset Cloak</button>
+                </div>
+            </div>
+
+            <!-- Set Background Media -->
+            <div class="settings-section">
+                <h2>Set Background Media</h2>
+                <p class="setting-description">Set a background image, GIF, or video. Enter a URL or upload a file.</p>
+                <div class="input-group">
+                    <input type="text" id="bgUrl" placeholder="Enter media URL (image, GIF, or video)" class="input-group">
+                    <input type="file" id="bgFile" accept="image/*,video/*" style="display: none;">
+                    <button class="secondary-button" id="uploadBg">Upload File</button>
+                </div>
+                <div class="button-group">
+                    <button class="secondary-button" id="saveBg">Save</button>
+                    <button class="secondary-button" id="resetBg">Reset</button>
+                </div>
+                <div id="bgPreview" style="margin-top: 10px; max-width: 200px; display: none;">
+                    <p>Preview:</p>
+                    <img id="bgImagePreview" style="max-width: 100%; display: none;">
+                    <video id="bgVideoPreview" style="max-width: 100%; display: none;" loop muted></video>
+                </div>
+            </div>
+
+            <style>
+            #bgPreview {
+                background: rgba(0,0,0,0.1);
+                padding: 10px;
+                border-radius: 5px;
+            }
+            </style>
+
+            <!-- Particles -->
+            <div class="settings-section">
+                <div class="setting-header">
+                    <h2>Particles</h2>
+                </div>
+                <p class="setting-description">Choose from a variety of particle effects to enhance your experience.</p>
+                <div class="particles-options">
+                    <div class="particle-option">
+                        <label for="toggle-rain">Rain</label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-rain">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="particle-option">
+                        <label for="toggle-snow">Snow</label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-snow">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="particle-option">
+                        <label for="toggle-confetti">Confetti</label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-confetti">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="particle-option">
+                        <label for="toggle-bubbles">Bubbles</label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-bubbles">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="particle-option">
+                        <label for="toggle-fireflies">Fireflies</label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-fireflies">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <p class="setting-note">Note: Using multiple particle effects at once may affect performance on some devices.</p>
+            </div>
+
+            <!-- Themes -->
+            <div class="settings-section">
+                <h2>Themes!</h2>
+                <p class="setting-description">Pick from a variety of themes to customize your experience.</p>
+                <select id="themeChoice" class="input-group">
+                    <option value="default">Default Theme</option>
+                    <option value="neon">Neon Theme</option>
+                    <option value="sunset">Sunset Theme</option>
+                    <option value="forest">Forest Theme</option>
+                    <option value="ocean">Ocean Theme</option>
+                    <option value="tech">Tech Theme</option>
+                    <option value="cyberpunk">Cyberpunk Theme</option>
+                    <option value="midnight">Midnight Theme</option>
+                    <option value="pastel">Pastel Theme</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab Cloaking
+        const cloakPresetSelect = document.getElementById('cloakPreset');
+        const saveCloak = document.getElementById('saveCloak');
+        const resetCloak = document.getElementById('resetCloak');
+
+        function updateFavicon(preset) {
+            let faviconPath = '/assets/favicon/google.ico';
+            let pageTitle = 'Google';
+
+            switch (preset) {
+                case 'drive':
+                    faviconPath = '/assets/favicon/drive.ico';
+                    pageTitle = 'Google Drive';
+                    break;
+                case 'classroom':
+                    faviconPath = '/assets/favicon/classroom.ico';
+                    pageTitle = 'Google Classroom';
+                    break;
+                case 'canvas':
+                    faviconPath = '/assets/favicon/canvas.ico';
+                    pageTitle = 'Canvas';
+                    break;
+                case 'default':
+                    faviconPath = '/assets/favicon/boogle.ico';
+                    pageTitle = 'Updaown\'s UBG';
+                    break;
+            }
+
+            // Update favicon
+            const links = document.querySelectorAll('link[rel="icon"]');
+            links.forEach(link => link.remove());
+            const newLink = document.createElement('link');
+            newLink.rel = 'icon';
+            newLink.href = faviconPath;
+            document.head.appendChild(newLink);
+
+            // Update title
+            document.title = pageTitle;
+        }
+
+        saveCloak.addEventListener('click', () => {
+            const preset = cloakPresetSelect.value;
+            let pageTitle;
+            
+            switch (preset) {
+                case 'google':
+                    pageTitle = 'Google';
+                    break;
+                case 'drive':
+                    pageTitle = 'Google Drive';
+                    break;
+                case 'classroom':
+                    pageTitle = 'Google Classroom';
+                    break;
+                case 'canvas':
+                    pageTitle = 'Canvas';
+                    break;
+                default:
+                    pageTitle = 'Updaown\'s UBG';
+            }
+            
+            const settings = {
+                cloakPreset: preset,
+                pageTitle: pageTitle
+            };
+            
+            localStorage.setItem('siteSettings', JSON.stringify(settings));
+            updateFavicon(preset);
+            alert('Cloak settings saved!');
+        });
+
+        resetCloak.addEventListener('click', () => {
+            localStorage.removeItem('siteSettings');
+            cloakPresetSelect.value = 'default';
+            updateFavicon('default');
+            alert('Cloak settings reset!');
+        });
+
+        // About:Blank functionality
+        const aboutBlankToggle = document.getElementById('aboutBlankToggle');
+        const openPopupButton = document.getElementById('openPopup');
+
+        aboutBlankToggle.addEventListener('change', () => {
+            localStorage.setItem('aboutBlank', aboutBlankToggle.checked);
+        });
+
+        openPopupButton.addEventListener('click', () => {
+            const win = window.open();
+            win.document.body.style.margin = '0';
+            win.document.body.style.height = '100vh';
+            const iframe = win.document.createElement('iframe');
+            iframe.style.border = 'none';
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            iframe.style.margin = '0';
+            iframe.src = window.location.href;
+            win.document.body.appendChild(iframe);
+        });
+
+        // Background Media Functionality
+        const bgUrlInput = document.getElementById('bgUrl');
+        const bgFileInput = document.getElementById('bgFile');
+        const uploadBgBtn = document.getElementById('uploadBg');
+        const saveBgBtn = document.getElementById('saveBg');
+        const resetBgBtn = document.getElementById('resetBg');
+        const bgPreview = document.getElementById('bgPreview');
+        const bgImagePreview = document.getElementById('bgImagePreview');
+        const bgVideoPreview = document.getElementById('bgVideoPreview');
+
+        // Handle file upload button
+        uploadBgBtn.addEventListener('click', () => {
+            bgFileInput.click();
+        });
+
+        // Handle file selection
+        bgFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const dataUrl = e.target.result;
+                    bgUrlInput.value = dataUrl;
+                    showPreview(dataUrl);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Handle URL input
+        bgUrlInput.addEventListener('input', () => {
+            showPreview(bgUrlInput.value);
+        });
+
+        // Preview function
+        function showPreview(url) {
+            if (!url) {
+                bgPreview.style.display = 'none';
+                return;
+            }
+
+            bgPreview.style.display = 'block';
+            
+            // Reset previews
+            bgImagePreview.style.display = 'none';
+            bgVideoPreview.style.display = 'none';
+            
+            if (url.match(/\.(mp4|webm|ogg)$/i) || url.startsWith('data:video')) {
+                // Video
+                bgVideoPreview.src = url;
+                bgVideoPreview.style.display = 'block';
+                bgVideoPreview.play();
+            } else {
+                // Image or GIF
+                bgImagePreview.src = url;
+                bgImagePreview.style.display = 'block';
+            }
+        }
+
+        // Save background
+        saveBgBtn.addEventListener('click', () => {
+            const url = bgUrlInput.value;
+            if (!url) {
+                alert('Please enter a URL or upload a file');
+                return;
+            }
+
+            const settings = {
+                type: url.match(/\.(mp4|webm|ogg)$/i) || url.startsWith('data:video') ? 'video' : 'image',
+                url: url
+            };
+
+            localStorage.setItem('backgroundSettings', JSON.stringify(settings));
+            applyBackground(settings);
+            alert('Background saved!');
+        });
+
+        // Reset background
+        resetBgBtn.addEventListener('click', () => {
+            localStorage.removeItem('backgroundSettings');
+            bgUrlInput.value = '';
+            bgPreview.style.display = 'none';
+            document.body.style.backgroundImage = 'none';
+            removeBackgroundVideo();
+            alert('Background reset!');
+        });
+
+        // Apply background function
+        function applyBackground(settings) {
+            removeBackgroundVideo();
+            
+            if (settings.type === 'video') {
+                const video = document.createElement('video');
+                video.id = 'backgroundVideo';
+                video.src = settings.url;
+                video.autoplay = true;
+                video.loop = true;
+                video.muted = true;
+                video.style.position = 'fixed';
+                video.style.right = '0';
+                video.style.bottom = '0';
+                video.style.minWidth = '100%';
+                video.style.minHeight = '100%';
+                video.style.width = 'auto';
+                video.style.height = 'auto';
+                video.style.zIndex = '-1';
+                video.style.objectFit = 'cover';
+                document.body.appendChild(video);
+                document.body.style.backgroundImage = 'none';
+            } else {
+                document.body.style.backgroundImage = `url(${settings.url})`;
+                document.body.style.backgroundSize = 'cover';
+                document.body.style.backgroundPosition = 'center';
+                document.body.style.backgroundRepeat = 'no-repeat';
+                document.body.style.backgroundAttachment = 'fixed';
+            }
+        }
+
+        // Remove background video function
+        function removeBackgroundVideo() {
+            const existingVideo = document.getElementById('backgroundVideo');
+            if (existingVideo) {
+                existingVideo.remove();
+            }
+        }
+
+        // Load saved background on page load
+        const savedBackground = localStorage.getItem('backgroundSettings');
+        if (savedBackground) {
+            const settings = JSON.parse(savedBackground);
+            bgUrlInput.value = settings.url;
+            showPreview(settings.url);
+            applyBackground(settings);
+        }
+
+        // Particles Toggle
+        const particlesToggle = document.getElementById('toggle-rain');
+        const snowToggle = document.getElementById('toggle-snow');
+        const confettiToggle = document.getElementById('toggle-confetti');
+        const bubblesToggle = document.getElementById('toggle-bubbles');
+        const firefliesToggle = document.getElementById('toggle-fireflies');
+        
+        particlesToggle.addEventListener('change', () => {
+            localStorage.setItem('rainEnabled', particlesToggle.checked);
+            if (particlesToggle.checked) {
+                loadParticles('rain');
+            } else {
+                unloadParticles('rain');
+            }
+        });
+
+        snowToggle.addEventListener('change', () => {
+            localStorage.setItem('snowEnabled', snowToggle.checked);
+            if (snowToggle.checked) {
+                loadParticles('snow');
+            } else {
+                unloadParticles('snow');
+            }
+        });
+
+        confettiToggle.addEventListener('change', () => {
+            localStorage.setItem('confettiEnabled', confettiToggle.checked);
+            if (confettiToggle.checked) {
+                loadParticles('confetti');
+            } else {
+                unloadParticles('confetti');
+            }
+        });
+
+        bubblesToggle.addEventListener('change', () => {
+            localStorage.setItem('bubblesEnabled', bubblesToggle.checked);
+            if (bubblesToggle.checked) {
+                loadParticles('bubbles');
+            } else {
+                unloadParticles('bubbles');
+            }
+        });
+
+        firefliesToggle.addEventListener('change', () => {
+            localStorage.setItem('firefliesEnabled', firefliesToggle.checked);
+            if (firefliesToggle.checked) {
+                loadParticles('fireflies');
+            } else {
+                unloadParticles('fireflies');
+            }
+        });
+
+        function loadParticles(type) {
+            particlesLoader.load(type);
+        }
+
+        function unloadParticles(type) {
+            particlesLoader.unload(type);
+        }
+
+        // Theme Selection
+        const themeChoice = document.getElementById('themeChoice');
+        
+        function applyTheme(theme) {
+            // Use the global verification function
+            theme = window.verifyAndApplyTheme ? window.verifyAndApplyTheme() : theme;
+            
+            // Remove any existing theme stylesheet
+            const existingTheme = document.querySelector('link[data-theme]');
+            if (existingTheme) {
+                existingTheme.remove();
+            }
+
+            // Clear any theme classes from body
+            document.body.className = document.body.className
+                .split(' ')
+                .filter(cls => !cls.startsWith('theme-'))
+                .join(' ');
+
+            // If not default theme, add the new theme stylesheet
+            if (theme !== 'default') {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = `assets/css/themes/${theme}.css`;
+                link.setAttribute('data-theme', theme);
+                document.head.appendChild(link);
+                
+                // Add theme class to body
+                document.body.classList.add(`theme-${theme}`);
+            }
+        }
+        
+        themeChoice.addEventListener('change', () => {
+            const selectedTheme = themeChoice.value;
+            localStorage.setItem('theme', selectedTheme);
+            applyTheme(selectedTheme);
+        });
+
+        // Load theme setting on page load
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            themeChoice.value = savedTheme;
+            applyTheme(savedTheme);
+        }
+
+        // Load all settings on page load
+        window.addEventListener('load', () => {
+            // Load about:blank setting
+            const aboutBlank = localStorage.getItem('aboutBlank') === 'true';
+            aboutBlankToggle.checked = aboutBlank;
+
+            // Load panic key settings
+            const panicKey = localStorage.getItem('panicKey');
+            const panicUrl = localStorage.getItem('panicUrl');
+            if (panicKey) document.getElementById('panicKey').value = panicKey;
+            if (panicUrl) document.getElementById('panicUrl').value = panicUrl;
+
+            // Load particle settings - Modified to work without login requirements
+            const rainEnabled = localStorage.getItem('rainEnabled') === 'true';
+            const snowEnabled = localStorage.getItem('snowEnabled') === 'true';
+            const confettiEnabled = localStorage.getItem('confettiEnabled') === 'true';
+            const bubblesEnabled = localStorage.getItem('bubblesEnabled') === 'true';
+            const firefliesEnabled = localStorage.getItem('firefliesEnabled') === 'true';
+
+            particlesToggle.checked = rainEnabled;
+            snowToggle.checked = snowEnabled;
+            confettiToggle.checked = confettiEnabled;
+            bubblesToggle.checked = bubblesEnabled;
+            firefliesToggle.checked = firefliesEnabled;
+
+            // Apply all enabled particle effects without login checks
+            if (rainEnabled) loadParticles('rain');
+            if (snowEnabled) loadParticles('snow');
+            if (confettiEnabled) loadParticles('confetti');
+            if (bubblesEnabled) loadParticles('bubbles');
+            if (firefliesEnabled) loadParticles('fireflies');
+        });
+
+        // Add panic key functionality
+        const panicKeyInput = document.getElementById('panicKey');
+        const panicUrlInput = document.getElementById('panicUrl');
+        const savePanicKeyBtn = document.getElementById('savePanicKey');
+        const resetPanicKeyBtn = document.getElementById('resetPanicKey');
+
+        // Load existing settings
+        const savedPanicKey = localStorage.getItem('panicKey');
+        const savedPanicUrl = localStorage.getItem('panicUrl');
+        if (savedPanicKey) panicKeyInput.value = savedPanicKey;
+        if (savedPanicUrl) panicUrlInput.value = savedPanicUrl;
+
+        // Handle key input
+        panicKeyInput.addEventListener('keydown', (e) => {
+            e.preventDefault();
+            // Ignore modifier keys
+            if (['Control', 'Alt', 'Shift', 'Meta'].includes(e.key)) return;
+            panicKeyInput.value = e.key;
+        });
+
+        // Save settings
+        savePanicKeyBtn.addEventListener('click', () => {
+            const panicKey = panicKeyInput.value;
+            const panicUrl = panicUrlInput.value || 'https://www.google.com/';
+            
+            if (!panicKey) {
+                alert('Please press a key first');
+                return;
+            }
+
+            localStorage.setItem('panicKey', panicKey);
+            localStorage.setItem('panicUrl', panicUrl);
+            alert('Panic key settings saved!');
+        });
+
+        // Reset settings
+        resetPanicKeyBtn.addEventListener('click', () => {
+            localStorage.removeItem('panicKey');
+            localStorage.removeItem('panicUrl');
+            panicKeyInput.value = '';
+            panicUrlInput.value = '';
+            alert('Panic key settings reset!');
+        });
+    </script>
+    <script>
+        // Apply saved settings
+        const applySettings = () => {
+            const settings = JSON.parse(localStorage.getItem('siteSettings') || '{}');
+            
+            // Set default title if no settings exist
+            document.title = settings.pageTitle || 'Google';
+            
+            // Set default favicon if no settings exist
+            const faviconPath = settings.cloakPreset ? {
+                'google': 'assets/favicon/google.ico',
+                'drive': 'assets/favicon/drive.ico',
+                'classroom': 'assets/favicon/classroom.ico',
+                'canvas': 'assets/favicon/canvas.ico'
+            }[settings.cloakPreset] : 'assets/favicon/google.ico';
+
+            const links = document.querySelectorAll('link[rel="icon"]');
+            links.forEach(link => link.remove());
+            const newLink = document.createElement('link');
+            newLink.rel = 'icon';
+            newLink.href = faviconPath;
+            document.head.appendChild(newLink);
+        };
+        
+        // Apply settings when page loads
+        document.addEventListener('DOMContentLoaded', applySettings);
+        
+    </script>
+</body>
+</html>

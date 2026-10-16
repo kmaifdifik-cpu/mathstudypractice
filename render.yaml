@@ -1,8 +1,7 @@
 services:
   - type: web
-    name: classroomspot-bare
+    name: classroomspot-proxy
     env: node
     plan: free
-    buildCommand: npm install || true
-    startCommand: node bare-server.js
-    healthCheckPath: /v1/
+    buildCommand: npm install
+    startCommand: npm start

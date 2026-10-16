@@ -1,0 +1,500 @@
+/* Hide scrollbars */ ::-webkit-scrollbar {
+   display: none;
+}
+
+html,
+body {
+   scrollbar-width: none; /* Firefox */
+   -ms-overflow-style: none; /* IE/Edge */
+}
+
+/* Body styles */
+body {
+   background-color: #111827;
+   color: white;
+   font-family: "Inter", sans-serif;
+   margin: 0;
+   padding: 0;
+}
+
+/* Container styles */
+.container {
+   max-width: 1400px;
+   margin: 0 auto;
+   padding: 80px 20px 20px;
+   text-align: center;
+}
+
+/* Search container styles */
+.search-container {
+   margin: 30px auto;
+   max-width: 600px;
+}
+
+#searchInput {
+   width: 100%;
+   padding: 12px 24px;
+   background-color: #1f2937;
+   border: 2px solid #374151;
+   border-radius: 8px;
+   color: white;
+   font-size: 1rem;
+   outline: none;
+   transition: border-color 0.2s;
+}
+
+#searchInput:focus {
+   border-color: #3b82f6;
+}
+
+/* Button styles */
+.button {
+   background: linear-gradient(165deg, #1f2937, #111827);
+   border-radius: 16px;
+   overflow: hidden;
+   text-decoration: none;
+   color: white;
+   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+   display: flex;
+   flex-direction: column;
+   padding: 1.2%;
+   position: relative;
+   box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.2), inset 0 0 0 1px
+      rgba(255, 255, 255, 0.07);
+   border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.button::before {
+   content: "";
+   position: absolute;
+   top: 0;
+   left: 0;
+   right: 0;
+   bottom: 0;
+   border-radius: 16px;
+   background: linear-gradient(
+      125deg,
+      rgba(255, 255, 255, 0.3),
+      rgba(255, 255, 255, 0.05)
+   );
+   opacity: 0;
+   transition: opacity 0.4s ease;
+}
+
+.button:hover {
+   transform: translateY(-8px) scale(1.02);
+   box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.3), inset 0 0 0 1px
+      rgba(255, 255, 255, 0.15);
+   background: linear-gradient(165deg, #243548, #1a2330);
+}
+
+.button:hover::before {
+   opacity: 1;
+}
+
+/* Image styles */
+.button img {
+   width: 100%;
+   height: 180px;
+   object-fit: cover;
+   border-radius: 12px;
+   transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+   filter: brightness(0.95);
+}
+
+.button:hover img {
+   transform: scale(1.08);
+   filter: brightness(1.1);
+}
+
+/* Game title styles */
+.game-title {
+   padding: 14px 10px;
+   font-size: 0.95rem;
+   text-align: left;
+   font-weight: 500;
+   background: rgba(0, 0, 0, 0.2);
+   border-top: 1px solid rgba(255, 255, 255, 0.07);
+   position: relative;
+   backdrop-filter: blur(5px);
+}
+
+.button:hover .game-title {
+   background: rgba(0, 0, 0, 0.25);
+   border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Heading styles */
+h1 {
+   color: white;
+   font-size: 2.5rem;
+   margin-bottom: 0;
+}
+
+.subtitle {
+   color: #9ca3af;
+   margin-top: 10px;
+   font-size: 1.1rem;
+}
+
+/* Navigation bar styles */
+.navbar {
+   background-color: #1f2937;
+   padding: 16px 24px;
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   position: fixed;
+   top: 0;
+   left: 0;
+   right: 0;
+   z-index: 1000;
+   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.nav-logo {
+   font-size: 1.5rem;
+   font-weight: bold;
+   color: white;
+   text-decoration: none;
+}
+
+.nav-links {
+   display: flex;
+   gap: 24px;
+   align-items: center;
+}
+
+.nav-link {
+   color: #9ca3af;
+   text-decoration: none;
+   font-size: 0.9rem;
+   transition: color 0.2s;
+   position: relative;
+}
+
+.nav-link:hover {
+   color: white;
+}
+
+
+
+/* Games container styles */
+#gamesContainer {
+   display: grid;
+   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+   gap: 24px;
+   margin-top: 30px;
+   padding: 0 20px;
+}
+
+/* Overlay iframe styles */
+#rain-overlay {
+   position: fixed;
+   top: 0;
+   left: 0;
+   width: 100%;
+   height: 100%;
+   z-index: 9999;
+   pointer-events: none; /* Makes the iframe click-throughable */
+   border: none;
+}
+
+/* Toggle switch styles */
+.toggle-switch {
+   position: fixed;
+   bottom: 20px;
+   right: 20px;
+   display: inline-block;
+   width: 120px;
+   height: 34px;
+   background-color: #ccc;
+   border-radius: 34px;
+   transition: background-color 0.4s;
+   box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+   font-family: "Inter", sans-serif;
+   font-size: 12px;
+   color: white;
+   text-align: center;
+   line-height: 34px;
+   cursor: pointer;
+   user-select: none;
+}
+
+.toggle-switch input {
+   opacity: 0;
+   width: 0;
+   height: 0;
+}
+
+.slider {
+   position: absolute;
+   cursor: pointer;
+   top: 0;
+   left: 0;
+   right: 0;
+   bottom: 0;
+   background-color: #ccc;
+   transition: 0.4s;
+   border-radius: 34px;
+}
+
+.slider:before {
+   position: absolute;
+   content: "Rain: Off";
+   height: 26px;
+   width: 60px;
+   left: 4px;
+   bottom: 4px;
+   background-color: white;
+   color: black;
+   text-align: center;
+   line-height: 26px;
+   font-size: 12px;
+   font-weight: bold;
+   transition: 0.4s;
+   border-radius: 34px;
+}
+
+input:checked + .slider {
+   background-color: #ff4757;
+}
+
+input:checked + .slider:before {
+   transform: translateX(56px);
+   content: "Rain: On";
+   color: rgb(0, 0, 0);
+}
+
+#loadingIndicator {
+   position: absolute;
+   top: 0;
+   left: 0;
+   width: 100%;
+   height: 100%;
+   background: #1f2937;
+   display: none;
+   flex-direction: column;
+   justify-content: center;
+   align-items: center;
+   z-index: 1001;
+}
+
+.spinner {
+   width: 50px;
+   height: 50px;
+   border: 5px solid #3b82f6;
+   border-top: 5px solid transparent;
+   border-radius: 50%;
+   animation: spin 1s linear infinite;
+   margin-bottom: 20px;
+}
+
+.loading-text {
+   color: white;
+   font-size: 1.2rem;
+   font-weight: 500;
+   margin-bottom: 10px;
+}
+
+.timeout-message {
+   color: #ff6b6b;
+   font-size: 1rem;
+   margin: 15px 0;
+   font-weight: 500;
+}
+
+.timeout-button {
+   background-color: #ff6b6b;
+   color: white;
+   border: none;
+   padding: 8px 20px;
+   border-radius: 5px;
+   cursor: pointer;
+   font-size: 0.9rem;
+   transition: background-color 0.2s;
+}
+
+.timeout-button:hover {
+   background-color: #ff5252;
+}
+
+@keyframes spin {
+   0% {
+      transform: rotate(0deg);
+   }
+   100% {
+      transform: rotate(360deg);
+   }
+}
+
+#iframeContainer {
+   position: fixed;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%);
+   width: 85%;
+   height: 85%;
+   background: #1f2937;
+   z-index: 1000;
+   display: none;
+   flex-direction: column;
+   border-radius: 10px;
+   overflow: hidden;
+   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+#gameObject {
+   width: 100%;
+   height: calc(100% - 40px);
+   border: none;
+   margin: 0;
+   padding: 0;
+   background: #1f2937;
+   display: block;
+}
+
+#iframeControls {
+   position: relative;
+   height: 40px;
+   padding: 5px 10px;
+   background: #1f2937;
+   display: flex;
+   justify-content: flex-end;
+   align-items: center;
+   gap: 10px;
+}
+
+#iframeControls button {
+   background-color: #3b82f6;
+   color: white;
+   border: none;
+   padding: 8px 16px;
+   border-radius: 5px;
+   cursor: pointer;
+   font-size: 14px;
+   transition: background-color 0.2s;
+}
+
+#iframeControls button:hover {
+   background-color: #2563eb;
+}
+
+/* Global Animations */
+@keyframes fadeIn {
+   from {
+      opacity: 0;
+   }
+   to {
+      opacity: 1;
+   }
+}
+
+@keyframes slideUp {
+   from {
+      transform: translateY(20px);
+      opacity: 0;
+   }
+   to {
+      transform: translateY(0);
+      opacity: 1;
+   }
+}
+
+@keyframes scaleIn {
+   from {
+      transform: scale(0.95);
+      opacity: 0;
+   }
+   to {
+      transform: scale(1);
+      opacity: 1;
+   }
+}
+
+@keyframes slideInRight {
+   from {
+      transform: translateX(20px);
+      opacity: 0;
+   }
+   to {
+      transform: translateX(0);
+      opacity: 1;
+   }
+}
+
+/* Apply animations to elements */
+.navbar {
+   animation: fadeIn 0.5s ease-out;
+   will-change: opacity;
+}
+
+.nav-logo {
+   animation: fadeIn 0.8s ease-out;
+   will-change: opacity;
+}
+
+.nav-links {
+   animation: slideInRight 0.5s ease-out;
+   will-change: transform, opacity;
+}
+
+.nav-link {
+   animation: fadeIn 0.5s ease-out;
+   animation-fill-mode: both;
+}
+
+.nav-link:nth-child(1) {
+   animation-delay: 0.2s;
+}
+.nav-link:nth-child(2) {
+   animation-delay: 0.3s;
+}
+.nav-link:nth-child(3) {
+   animation-delay: 0.4s;
+}
+
+.container {
+   animation: slideUp 0.8s ease-out;
+   will-change: transform, opacity;
+}
+
+h1 {
+   animation: slideUp 0.8s ease-out;
+   will-change: transform, opacity;
+}
+
+.subtitle {
+   animation: slideUp 0.8s ease-out 0.1s;
+   animation-fill-mode: both;
+   will-change: transform, opacity;
+}
+
+.search-container {
+   animation: slideUp 0.8s ease-out 0.2s;
+   animation-fill-mode: both;
+   will-change: transform, opacity;
+}
+
+#gamesContainer .button {
+   animation: scaleIn 0.5s ease-out;
+   animation-fill-mode: both;
+}
+
+@keyframes fadeInUp {
+   from {
+      opacity: 0;
+      transform: translateY(10px);
+   }
+   to {
+      opacity: 1;
+      transform: translateY(0);
+   }
+}
+
+#gamesContainer .button {
+   opacity: 0;
+   animation: fadeInUp 0.5s ease forwards;
+   /* Ensure animation plays even when added dynamically */
+   will-change: opacity, transform;
+}
